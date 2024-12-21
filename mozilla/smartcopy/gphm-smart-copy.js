@@ -11,7 +11,9 @@ function copyToClipboard(text, html) {
         const selection = document.getSelection();
         //const selRange = selection.getRangeAt(0);
         var copied = selection.toString()
-        var modified = parseValuesOnly(copied)
+        lines = copied.split('\n');
+        var modified = parsePopup(lines);
+        //var modified = parseValuesOnly(lines);
         
 
 
@@ -55,11 +57,69 @@ All traits
     HumbleWon't ask for much
     */
 let TRAITS = [ "Arrogant", "Cocky", "Responsible", "Friendly", "Compassionate", "Agitator", "Tough", "Respectful", "Gentle", "Anonymous", "Modest", "Respected", "Role model", "True Leader", "Egocentric", "Childish", "Impressive", "Motivator", "Commander", "Nervous", "Anxious", "Stable", "Determined", "Heroic", "Lazy", "Half-hearted", "Half hearted", "Enthusiastic", "Purposeful", "Ambitious", "Easy-going", "Easy", "Eager", "Reasonable", "Hard to please", "Greedy", "Humble", "Compliant", "Reasonable", "Hard to please" ]
-function parseValuesOnly(copied) {
-    SEP = '\t'
-    ret = ""
-    elements = copied.split('\n')
+let POS = ['Forward', 'Defender', 'Center']
+let SEP = '\t';
+
+function parsePopup(lines) {
+    console.log(lines);
+
+    ret = '';
+    if (lines[8] === 'Overall') {
+        names = lines[0].split(' ').slice(0,2); //name
+
+        ret += names[0] + ' ' + names[1] + SEP
+        lines[5] = lines[5].replace('·', '');
+        lines[5] = lines[5].replace('·', '');
+        tmp = lines[5].replace('·', '').split(' ');
+        console.log(tmp);
+        let x = []
+        
+        x.push(tmp[0].trim() + SEP); // position
+        x.push(tmp[2].trim() + tmp[3].trim() + SEP); // age
+        x.push(tmp[5].trim() + SEP); // height
+        x.push(tmp[7].trim() + tmp[8].trim() + SEP); // weight
+        console.log(x);
+        ret += tmp[0].trim() + SEP; // position
+        ret += tmp[2].trim() + tmp[3].trim() + SEP; // age
+        ret += tmp[5].trim() + SEP; // height
+        ret += tmp[7].trim() + tmp[8].trim() + SEP; // weight
+
+        ret += lines[9].trim() + SEP;
+        ret += lines[11].trim() + SEP;
+        ret += lines[13].trim() + SEP;
+        ret += lines[15].trim() + SEP;
+        ret += lines[17].trim() + SEP;
+        ret += lines[19].trim() + SEP;
+        ret += lines[21].trim() + SEP;
+        ret += lines[23].trim() + SEP;
+        ret += lines[25].trim() + SEP;
+        ret += lines[27].trim() + SEP;
+
+        let i=0;
+        for (i = 0; i < 6; i++) {
+            if ((32 + i) < lines.length) {
+                let e = lines[32+i].trim();
+                for (T of TRAITS) {
+                    if (e.toLowerCase().startsWith(T.toLowerCase())) {
+                        ret += T + SEP;
+                        break;
+                    }
+                }
+            }
+        }
+        
+    };
+
+    console.log(ret);
+    return ret
+};
+
+function parseValuesOnly(elements) {
+    ret = "";
+    let i = -1;
     for (e of elements) {
+        i += 1;
+
         e = e.trim()
         if (e == "") { continue; }
 
