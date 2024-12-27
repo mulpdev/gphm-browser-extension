@@ -1,22 +1,54 @@
+
+
 // This function must be called in a visible page, such as a browserAction popup
 // or a content script. Calling it in a background page has no effect!
-function copyToClipboard(text, html) {
+function copyPopupDraft(text, html) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
         event.stopImmediatePropagation();
-
 
         //var copied = event.clipboardData.getData("text/plain");
         const selection = document.getSelection();
         //const selRange = selection.getRangeAt(0);
         var copied = selection.toString()
         lines = copied.split('\n');
-        var modified = parsePopup(lines);
+        var modified = strPopupDraft(lines);
         //var modified = parseValuesOnly(lines);
         
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+}
 
 
+
+function strPopupDraft(lines) {
+    fakemap = parsePopupAll(lines)
+    // CurrDraft
+    ret  = fakemap.Name + SEP + fakemap.Position + SEP + fakemap.Age + SEP + fakemap.Height + SEP + fakemap.Weight + SEP + fakemap.Hand + SEP 
+    ret += fakemap.Skating + SEP + fakemap.Passing + SEP + fakemap.Puckhandling + SEP + fakemap.Shooting + SEP + fakemap.Defense + SEP + fakemap.Physical + SEP + fakemap.Spirit + SEP + fakemap.Endurance + SEP + fakemap.Faceoffs + SEP
+    ret += fakemap.Role + SEP + fakemap.Ego + SEP + fakemap.Dirty + SEP + fakemap.Leadership + SEP + fakemap.BigGames + SEP + fakemap.Ambition + SEP + fakemap.Greed + SEP
+    ret += fakemap.Stats + SEP
+    console.log(ret);
+    return ret
+};
+
+function copyPopupAll(text, html) {
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        event.stopImmediatePropagation();
+
+        const selection = document.getSelection();
+        var copied = selection.toString()
+        lines = copied.split('\n');
+        var modified = strPopupAll(lines);
 
         // Overwrite the clipboard content.
         event.preventDefault();
@@ -28,92 +60,119 @@ function copyToClipboard(text, html) {
     document.execCommand("copy");
 }
 
-/*
- * Overall
-    93
-Reflexes
-    96
-Positioning
-    96
-PuckControl
-    92
-PuckHandling
-    93
-Athletic
-    91
-Endurance
-    89
-Spirit
-89
+function strPopupAll(lines) {
+    fakemap = parsePopupAll(lines)
+    // DB
+    ret  = fakemap.Name + SEP + fakemap.Age + SEP + fakemap.Height + SEP + fakemap.Weight + SEP + fakemap.Hand + SEP + fakemap.Nationality + SEP + fakemap.Overall + SEP;
+    ret += SEP.repeat(6)
+    ret += fakemap.Skating + SEP + fakemap.Passing + SEP + fakemap.Puckhandling + SEP + fakemap.Shooting + SEP + fakemap.Defense + SEP + fakemap.Physical + SEP + fakemap.Spirit + SEP + fakemap.Endurance + SEP + fakemap.Faceoffs + SEP
+    ret += SEP.repeat(12)
+    ret += fakemap.Role + SEP + fakemap.Ego + SEP + fakemap.Dirty + SEP + fakemap.Leadership + SEP + fakemap.BigGames + SEP + fakemap.Ambition + SEP + fakemap.Greed + SEP
+    console.log(ret);
+    return ret
+}
 
-Show only top ratings
-All traits
-
-    CompassionateI will help you
-    AgitatorI´ll get under your skin
-    ModestDoesn´t speak much
-    AnxiousWhat if we lose?
-    EnthusiasticLove for the game
-    HumbleWon't ask for much
-    */
 let TRAITS = [ "Arrogant", "Cocky", "Responsible", "Friendly", "Compassionate", "Agitator", "Tough", "Respectful", "Gentle", "Anonymous", "Modest", "Respected", "Role model", "True Leader", "Egocentric", "Childish", "Impressive", "Motivator", "Commander", "Nervous", "Anxious", "Stable", "Determined", "Heroic", "Lazy", "Half-hearted", "Half hearted", "Enthusiastic", "Purposeful", "Ambitious", "Easy-going", "Easy", "Eager", "Reasonable", "Hard to please", "Greedy", "Humble", "Compliant", "Reasonable", "Hard to please" ]
 let POS = ['Forward', 'Defender', 'Center']
 let SEP = '\t';
 
-function parsePopup(lines) {
+function parsePopupAll(lines) {
     console.log(lines);
+    fakemap = {
+    'Name': '\t', 
+    'Nationality': '\t', 
+    'Role': '\t', 
+    'Position': '\t', 
+    'Age': '\t', 
+    'Height': '\t', 
+    'Weight': '\t', 
+    'Hand': '\t', 
+    'Overall': '\t', 
+    'Skating': '\t', 
+    'Passing': '\t', 
+    'Puckhandling': '\t', 
+    'Shooting': '\t', 
+    'Defense': '\t', 
+    'Physical': '\t', 
+    'Spirit': '\t', 
+    'Endurance': '\t', 
+    'Faceoffs': '\t',  
+    'Ego': '\t', 
+    'Dirty': '\t', 
+    'Leadership': '\t', 
+    'BigGames': '\t', 
+    'Ambition': '\t', 
+    'Greed': '\t',
+    'Stats': '\t'
+    }
 
-    ret = '';
-    if (lines[8] === 'Overall') {
-        names = lines[0].split(' ').slice(0,2); //name
+    var ovrIdx = lines.indexOf('Overall')
+    try {
+        idx = 8 - ovrIdx
+        
+        if (idx == 0) {
+        // name, nationality
+        names = lines[0].split(' ');
+        fakemap.Name = names[0] + ' ' + names[1];
+        if (lines.length > 4) {fakemap.Name += ' ' + names[2]} 
+        fakemap.Nationality = names[names.length-1]
+        
+        // role
+        fakemap.Role = lines[2].trim()
 
-        ret += names[0] + ' ' + names[1] + SEP
+        // position, age, height, weight
         lines[5] = lines[5].replace('·', '');
         lines[5] = lines[5].replace('·', '');
         tmp = lines[5].replace('·', '').split(' ');
-        console.log(tmp);
-        let x = []
-        
-        x.push(tmp[0].trim() + SEP); // position
-        x.push(tmp[2].trim() + tmp[3].trim() + SEP); // age
-        x.push(tmp[5].trim() + SEP); // height
-        x.push(tmp[7].trim() + tmp[8].trim() + SEP); // weight
-        console.log(x);
-        ret += tmp[0].trim() + SEP; // position
-        ret += tmp[2].trim() + tmp[3].trim() + SEP; // age
-        ret += tmp[5].trim() + SEP; // height
-        ret += tmp[7].trim() + tmp[8].trim() + SEP; // weight
+        fakemap.Position = tmp[0].trim()
+        fakemap.Age = tmp[2].trim() + tmp[3].trim()
+        fakemap.Height = tmp[5].trim() 
+        fakemap.Weight = tmp[7].trim() + tmp[8].trim()
+        fakemap.Hand = tmp[10].trim()
+        }
 
-        ret += lines[9].trim() + SEP;
-        ret += lines[11].trim() + SEP;
-        ret += lines[13].trim() + SEP;
-        ret += lines[15].trim() + SEP;
-        ret += lines[17].trim() + SEP;
-        ret += lines[19].trim() + SEP;
-        ret += lines[21].trim() + SEP;
-        ret += lines[23].trim() + SEP;
-        ret += lines[25].trim() + SEP;
-        ret += lines[27].trim() + SEP;
+        fakemap.Overall = lines[9-idx].trim()
+        fakemap.Skating = lines[11-idx].trim()
+        fakemap.Passing = lines[13-idx].trim()
+        fakemap.Puckhandling = lines[15-idx].trim()
+        fakemap.Shooting = lines[17-idx].trim()
+        fakemap.Defense = lines[19-idx].trim()
+        fakemap.Physical = lines[21-idx].trim()
+        fakemap.Spirit = lines[23-idx].trim()
+        fakemap.Endurance = lines[25-idx].trim()
+        fakemap.Faceoffs = lines[27-idx].trim()
 
         let i=0;
+        traits = []
+        traitsIdx = 26 - idx;
         for (i = 0; i < 6; i++) {
-            if ((32 + i) < lines.length) {
-                let e = lines[32+i].trim();
+            if ((traitsIdx + i) < lines.length) {
+                let e = lines[32+i-idx].trim();
                 for (T of TRAITS) {
                     if (e.toLowerCase().startsWith(T.toLowerCase())) {
-                        ret += T + SEP;
-                        break;
+                        //traits.push(T);
+                        //break;
+                        if (i === 0) {fakemap.Ego = T }
+                        else if (i === 1) {fakemap.Dirty = T }
+                        else if (i === 2) {fakemap.Leadership = T }
+                        else if (i === 3) {fakemap.BigGames = T }
+                        else if (i === 4) {fakemap.Ambition = T }
+                        else if (i === 5) {fakemap.Greed = T }
                     }
                 }
             }
         }
-        
-    };
 
-    console.log(ret);
-    return ret
+        league = lines[40-idx].split(',').slice(0, 1)
+        seasonstats = lines[43-idx].split('\t');
+        console.log(seasonstats)
+        fakemap.Stats = seasonstats[1].trim() + 'G/' + seasonstats[2].trim() + 'A/' + seasonstats[3].trim() + "P " + league 
+    }
+    catch (TypeError) {}
+
+    console.log(fakemap)
+    return fakemap
 };
-
 function parseValuesOnly(elements) {
     ret = "";
     let i = -1;
