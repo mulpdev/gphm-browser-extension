@@ -7,7 +7,7 @@ browser.contextMenus.create({
 );
 browser.contextMenus.create({
         id: "gphm-smart-copy-player-popup-draft",
-        title: "GPHM Smart Copy Player - Draft",
+        title: "GPHM Smart Copy Player - FA/Draft",
         contexts: ["selection"],
     },
     () => void browser.runtime.lastError,

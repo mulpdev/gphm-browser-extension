@@ -31,9 +31,9 @@ function copyPopupDraft(text, html) {
 function strPopupDraft(lines) {
     fakemap = parsePopupAll(lines)
     // CurrDraft
-    ret  = fakemap.Name + SEP + fakemap.Position + SEP + fakemap.Age + SEP + fakemap.Height + SEP + fakemap.Weight + SEP + fakemap.Hand + SEP 
+    ret  = fakemap.Name + SEP + fakemap.Position + SEP + fakemap.Age + SEP + fakemap.Height + SEP + fakemap.Weight + SEP + fakemap.Hand + SEP + fakemap.Overall + SEP
     ret += fakemap.Skating + SEP + fakemap.Passing + SEP + fakemap.Puckhandling + SEP + fakemap.Shooting + SEP + fakemap.Defense + SEP + fakemap.Physical + SEP + fakemap.Spirit + SEP + fakemap.Endurance + SEP + fakemap.Faceoffs + SEP
-    ret += fakemap.Role + SEP + fakemap.Ego + SEP + fakemap.Dirty + SEP + fakemap.Leadership + SEP + fakemap.BigGames + SEP + fakemap.Ambition + SEP + fakemap.Greed + SEP
+    ret += fakemap.Ego + SEP + fakemap.Dirty + SEP + fakemap.Leadership + SEP + fakemap.BigGames + SEP + fakemap.Ambition + SEP + fakemap.Greed + SEP
     ret += fakemap.Stats + SEP
     console.log(ret);
     return ret
@@ -114,7 +114,8 @@ function parsePopupAll(lines) {
         // name, nationality
         names = lines[0].split(' ');
         fakemap.Name = names[0] + ' ' + names[1];
-        if (lines.length > 4) {fakemap.Name += ' ' + names[2]} 
+        console.log(names);
+        if (names.length > 4) {fakemap.Name += ' ' + names[2]} 
         fakemap.Nationality = names[names.length-1]
         
         // role
@@ -269,7 +270,7 @@ function copyToClipboard2(text, html) {
         
         for (i = 0; i < advice_lists_all.length; i++)
         {
-            liked = advice_lists_all[0];
+            liked = advice_lists_all[i];
             likedstr = ''
             li_all = liked.querySelectorAll('li')
             for (j = 0; j < li_all.length; j++)
