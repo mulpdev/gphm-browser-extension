@@ -222,6 +222,8 @@ function copyToClipboard2(text, html) {
         t = p.textContent;
         spl = t.split(' is');
         name = spl[0];
+        spl = name.split(' brings');
+        name = spl[0]
         modified += name.trim() + ', ';
 
         
@@ -286,29 +288,9 @@ function copyToClipboard2(text, html) {
             modified += tmpstr;
         }
 
-        advice_lists_all = right.querySelectorAll('.advice-list');
-        console.log(advice_lists_all);
-        
-        for (i = 0; i < advice_lists_all.length; i++)
-        {
-            liked = advice_lists_all[i];
-            likedstr = ''
-            li_all = liked.querySelectorAll('li')
-            for (j = 0; j < li_all.length; j++)
-            {
-                li = li_all[j];
-                name = li.textContent;
-                name = name.substring(0, name.length-3)
-                modified += name + ", "
-                
-                //a = li.querySelector('a')
-                //rel = a.rel;
-                //modified += "&" + rel + ", "
-            }
-        }
-
         // right col
         advice_lists_all = right.querySelectorAll('.advice-list');
+        console.log('advice list');
         console.log(advice_lists_all);
         
         for (i = 0; i < advice_lists_all.length; i++)
@@ -316,12 +298,15 @@ function copyToClipboard2(text, html) {
             liked = advice_lists_all[i];
             likedstr = ''
             li_all = liked.querySelectorAll('li')
+            console.log(li_all)
             for (j = 0; j < li_all.length; j++)
             {
                 li = li_all[j];
                 name = li.textContent;
+                console.log(name);
                 name = name.substring(0, name.length-3)
                 modified += name + ", "
+                console.log(modified);
                 
                 //a = li.querySelector('a')
                 //rel = a.rel;
