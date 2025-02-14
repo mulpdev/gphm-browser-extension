@@ -213,6 +213,17 @@ function copyToClipboard2(text, html) {
         
 
         modified = ''
+
+        // get name
+        notes = document.getElementsByClassName('panel scouting-report-container__notes');
+        note = notes[0];
+        paras = note.querySelectorAll('p');
+        p = paras[1];
+        t = p.textContent;
+        spl = t.split(' is');
+        name = spl[0];
+        modified += name.trim() + ', ';
+
         
         
         
