@@ -202,6 +202,142 @@ function parseValuesOnly(elements) {
 }
 
 function copyToClipboard2(text, html) {
+    console.log('copyToClipboard2()');
+    function oncopy(event) {
+        console.log('copyToClipboard2() in event');
+        document.removeEventListener("copy", oncopy, true);
+        console.log('removed event listener');
+        // Hide the event from the page to prevent tampering.
+        //event.stopImmediatePropagation(); // what is event??
+        console.log('stopped propgation');
+        
+
+        modified = ''
+        
+        
+        
+        // get scouting data
+        srcontainers = document.getElementsByClassName('scouting-report-container');
+        console.log(srcontainers);
+        srcontainer = srcontainers[0];
+        console.log(srcontainer);
+        
+        // columns
+        cols = srcontainer.getElementsByClassName('column');
+        console.log(cols)
+        left = cols[0];
+        console.log(left)
+        right = cols[1];
+        console.log(right)
+
+        // left col
+        ldivs = left.querySelectorAll('div');
+        console.log('left stuff')
+        console.log(ldivs)
+        console.log(ldivs[0])
+        //console.log(ldivs.slice(0,1))
+        
+        personality_type = ldivs[0]; // skip
+        console.log("skip personality type");
+
+        personality_spectrum = ldivs[1];
+        console.log(personality_spectrum)
+        dli_all = personality_spectrum.querySelectorAll('.data-list__item');
+        console.log(dli_all);
+        for (i = 0; i < dli_all.length; i++)
+        {
+            dli = dli_all[i]
+            console.log(dli);
+            em = dli.querySelector('em')
+            console.log(em);
+            sibling = em.nextSibling;
+            modified += sibling.textContent.trim() + ', ';
+        }
+        
+        team_culture = ldivs[2]
+        console.log(team_culture)
+        dli_all = personality_spectrum.querySelectorAll('.data-list__item');
+        for (i = 0; i < dli_all.length; i++)
+        {
+            tmpstr = ''
+            em = dli.querySelector('em')
+            console.log(em);
+            sibling = em.nextSibling;
+            tmpstr += sibling.textContent.trim() + '|';
+            progress = dli.querySelector('.progress')
+            
+            color = pullGPHMColorFromClassName(progress);
+            if (color !== null) {
+                tmpstr += color + '|';
+            }
+            span = progress.querySelector('span')
+            tmpstr += span.style.width.trim() + ', ';
+            modified += tmpstr;
+        }
+
+        advice_lists_all = right.querySelectorAll('.advice-list');
+        console.log(advice_lists_all);
+        
+        for (i = 0; i < advice_lists_all.length; i++)
+        {
+            liked = advice_lists_all[i];
+            likedstr = ''
+            li_all = liked.querySelectorAll('li')
+            for (j = 0; j < li_all.length; j++)
+            {
+                li = li_all[j];
+                name = li.textContent;
+                name = name.substring(0, name.length-3)
+                modified += name + ", "
+                
+                //a = li.querySelector('a')
+                //rel = a.rel;
+                //modified += "&" + rel + ", "
+            }
+        }
+
+        // right col
+        advice_lists_all = right.querySelectorAll('.advice-list');
+        console.log(advice_lists_all);
+        
+        for (i = 0; i < advice_lists_all.length; i++)
+        {
+            liked = advice_lists_all[i];
+            likedstr = ''
+            li_all = liked.querySelectorAll('li')
+            for (j = 0; j < li_all.length; j++)
+            {
+                li = li_all[j];
+                name = li.textContent;
+                name = name.substring(0, name.length-3)
+                modified += name + ", "
+                
+                //a = li.querySelector('a')
+                //rel = a.rel;
+                //modified += "&" + rel + ", "
+            }
+        }
+        
+        
+            
+        modified = modified.replaceAll(",", "\t");
+        console.log(modified);
+        
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        console.log("copy: event prevent default");
+        event.clipboardData.setData("text/plain",  modified);
+        console.log("copy to clipboard event");
+
+    }
+    document.addEventListener("copy", oncopy, true);
+    console.log("reset onCopy event");
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+    console.log("COMPLETE!");
+}
+
+function copyToClipboard3(text, html) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
@@ -292,6 +428,8 @@ function copyToClipboard2(text, html) {
         // Overwrite the clipboard content.
         event.preventDefault();
         event.clipboardData.setData("text/plain",  modified);
+        console.log("copy to clipboard event");
+
     }
     document.addEventListener("copy", oncopy, true);
 
