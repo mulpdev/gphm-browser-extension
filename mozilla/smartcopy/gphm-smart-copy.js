@@ -39,7 +39,7 @@ function strPopupDraft(lines) {
     return ret
 };
 
-function copyPopupAll(text, html) {
+function copyPopupDB(text, html) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
@@ -62,12 +62,36 @@ function copyPopupAll(text, html) {
 
 function strPopupAll(lines) {
     fakemap = parsePopupAll(lines)
+    UNK = '?' + SEP
     // DB
-    ret  = fakemap.Name + SEP + fakemap.Age + SEP + fakemap.Height + SEP + fakemap.Weight + SEP + fakemap.Hand + SEP + fakemap.Nationality + SEP + fakemap.Overall + SEP;
-    ret += SEP.repeat(6)
-    ret += fakemap.Skating + SEP + fakemap.Passing + SEP + fakemap.Puckhandling + SEP + fakemap.Shooting + SEP + fakemap.Defense + SEP + fakemap.Physical + SEP + fakemap.Spirit + SEP + fakemap.Endurance + SEP + fakemap.Faceoffs + SEP
-    ret += SEP.repeat(12)
-    ret += fakemap.Role + SEP + fakemap.Ego + SEP + fakemap.Dirty + SEP + fakemap.Leadership + SEP + fakemap.BigGames + SEP + fakemap.Ambition + SEP + fakemap.Greed + SEP
+    ret  = fakemap.Name + SEP
+    ret += fakemap.Age + SEP  
+    ret += fakemap.Nationality + SEP
+    ret += fakemap.Height + SEP  
+    ret += fakemap.Weight + SEP  
+    ret += fakemap.Hand + SEP  
+    ret += fakemap.Role + SEP
+    ret += fakemap.Overall  + SEP
+    ret += UNK.repeat(6) // J - N
+    ret += fakemap.Skating + SEP  
+    ret += fakemap.Passing + SEP  
+    ret += fakemap.Puckhandling  + SEP
+    ret += fakemap.Shooting + SEP
+    ret += fakemap.Defense + SEP  
+    ret += fakemap.Physical + SEP  
+    ret += fakemap.Spirit + SEP  
+    ret += fakemap.Endurance + SEP  
+    ret += fakemap.Faceoffs + SEP
+    ret += UNK.repeat(12) // W - AI
+    ret += fakemap.Ego + SEP 
+    ret += fakemap.Dirty + SEP 
+    ret += fakemap.Leadership + SEP 
+    ret += fakemap.BigGames + SEP 
+    ret += fakemap.Ambition + SEP 
+    ret += fakemap.Greed + SEP
+    ret += UNK // Personality
+    ret += UNK // Culture
+    ret += UNK // WI
     console.log(ret);
     return ret
 }

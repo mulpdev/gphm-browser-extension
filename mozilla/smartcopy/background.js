@@ -14,7 +14,7 @@ browser.contextMenus.create({
 );
 browser.contextMenus.create({
         //id: "gphm-smart-copy-player-popup-draft",
-        id: "gphm-smart-copy-player-popup-all",
+        id: "gphm-smart-copy-player-popup-db",
         title: "GPHM Smart Copy Player - DB",
         contexts: ["selection"],
     },
@@ -26,8 +26,8 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === "gphm-smart-copy-player-popup-draft") {
         copyFunc = "copyPopupDraft";
     }
-    else if (info.menuItemId === "gphm-smart-copy-player-popup-all") {
-        copyFunc = "copyPopupAll";
+    else if (info.menuItemId === "gphm-smart-copy-player-popup-db") {
+        copyFunc = "copyPopupDB";
     }
     else if (info.menuItemId === "gphm-smart-copy-scouting-profile") {
         copyFunc = "copyToClipboard2";
