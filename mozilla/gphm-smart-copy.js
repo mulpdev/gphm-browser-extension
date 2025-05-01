@@ -1,4 +1,4 @@
-const BIO = ['Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand']
+const BIO = ['Link', 'Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand']
 const RATINGS = ['Overall', 'Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'Physical', 'Spirit', 'Endurance', 'Faceoffs'];
 const TRAITS = ['Ego', 'Dirty', 'Leadership', 'BigGames', 'Ambition', 'Greed', 'Persona', 'Culture', 'Winner'];
 const PROFILE = ['Persona', 'Culture', 'Winner']
@@ -344,6 +344,13 @@ function parsePopupHtml(popupClassName, popupClassIndex) {
     
     let statline = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
     fakePlayerObj['StatLine'] = statline;
+
+    links = popup.querySelector('.player-dropdown__buttons');
+    playerPageButton = links.getElementsByTagName('a')[0];
+    link = playerPageButton.href;
+    console.log(link);
+    fakePlayerObj.Link = link;
+
     
     console.log(fakePlayerObj);
     return fakePlayerObj;
@@ -352,9 +359,6 @@ function parsePopupHtml(popupClassName, popupClassIndex) {
 /* HELPER funcs */
 function createFakePlayerObject() {
     let fakePlayerObj = { };
-
-    fakePlayerObj['Link'] = 'Link'
-    ALL_ATTRIBS_OBJ['Link'] = 'Link'
 
     for (B of BIO) {
         fakePlayerObj[B] = '\t';
@@ -449,6 +453,7 @@ function parseFakePlayerObjectDB(fakePlayerObj, DEFAULT_VAL, SEP) {
 
 function parseFakePlayerObjectFA(fakePlayerObj, DEFAULT_VAL, SEP) {
         let attribs = [];
+        attribs.push(ALL_ATTRIBS_OBJ.Link);
         attribs.push(ALL_ATTRIBS_OBJ.Name);
         attribs.push(ALL_ATTRIBS_OBJ.Position);
         attribs.push(ALL_ATTRIBS_OBJ.Age);
