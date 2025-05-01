@@ -1,22 +1,28 @@
 browser.contextMenus.create({
         id: "gphm-smart-copy-scouting-profile",
         title: "GPHM Smart Copy Scouting Profile",
-        contexts: ["page"],
+        contexts: ["page"], // "page", "selection", etc
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
         id: "gphm-smart-copy-player-popup-draft",
         title: "GPHM Smart Copy Player - FA/Draft",
-        contexts: ["selection"],
+        contexts: ["selection"], // "page", "selection", etc
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
-        //id: "gphm-smart-copy-player-popup-draft",
         id: "gphm-smart-copy-player-popup-db",
         title: "GPHM Smart Copy Player - DB",
-        contexts: ["selection"],
+        contexts: ["selection"], // "page", "selection", etc
+    },
+    () => void browser.runtime.lastError,
+);
+browser.contextMenus.create({
+        id: "gphm-smart-copy-TESTER",
+        title: "GPHM Smart Copy TESTER",
+        contexts: ["page"], // "page", "selection", etc
     },
     () => void browser.runtime.lastError,
 );
@@ -31,6 +37,9 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     }
     else if (info.menuItemId === "gphm-smart-copy-scouting-profile") {
         copyFunc = "copyToClipboard2";
+    }
+    else if (info.menuItemId === "gphm-smart-copy-TESTER") {
+        copyFunc = "TESTER";
     }
         // gphm-smart-copy.js defines function copyToClipboard.
         const code = copyFunc + "()";
