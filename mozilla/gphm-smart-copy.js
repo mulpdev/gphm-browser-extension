@@ -2,6 +2,9 @@ const BIO = ['Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age',
 const RATINGS = ['Overall', 'Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'Physical', 'Spirit', 'Endurance', 'Faceoffs'];
 const TRAITS = ['Ego', 'Dirty', 'Leadership', 'BigGames', 'Ambition', 'Greed', 'Persona', 'Culture', 'Winner'];
 const PROFILE = ['Persona', 'Culture', 'Winner']
+const SEASONSTATS = ['Reputation', 'Confidence', 'Health', 'League', 'GP', 'G', 'A', 'PTS', 'PIM', 'PER']
+
+let ALL_ATTRIBS_OBJ = {};
 
 /*
 NOTE1: calls document.getElementsByClassName() so comma seperated string of each className
@@ -13,44 +16,27 @@ NOTE3: querySelector() only returns FIRST subelement, querySelectorAll() returns
 
 // This function must be called in a visible page, such as a browserAction popup
 // or a content script. Calling it in a background page has no effect!
-function copyPopupDraft(text, html) {
+
+function TESTER(text, html) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
-        event.stopImmediatePropagation();
+        //event.stopImmediatePropagation(); // if event exists??
 
-        //var copied = event.clipboardData.getData("text/plain");
-        const selection = document.getSelection();
-        //const selRange = selection.getRangeAt(0);
-        var copied = selection.toString()
-        lines = copied.split('\n');
-        var modified = strPopupDraft(lines);
-        //var modified = parseValuesOnly(lines);
-        
+        console.log("TESTER RUNNING");
+        modified = "LOL TEST";
+
         // Overwrite the clipboard content.
         event.preventDefault();
         event.clipboardData.setData("text/plain",  modified);
     }
     document.addEventListener("copy", oncopy, true);
-
     // Requires the clipboardWrite permission, or a user gesture:
     document.execCommand("copy");
+    console.log("TESTER COMPLETE!");
 }
 
-
-
-function strPopupDraft(lines) {
-    fakemap = parsePopupAll(lines)
-    // CurrDraft
-    ret  = fakemap.Name + SEP + fakemap.Position + SEP + fakemap.Age + SEP + fakemap.Height + SEP + fakemap.Weight + SEP + fakemap.Hand + SEP + fakemap.Overall + SEP
-    ret += fakemap.Skating + SEP + fakemap.Passing + SEP + fakemap.Puckhandling + SEP + fakemap.Shooting + SEP + fakemap.Defense + SEP + fakemap.Physical + SEP + fakemap.Spirit + SEP + fakemap.Endurance + SEP + fakemap.Faceoffs + SEP
-    ret += fakemap.Ego + SEP + fakemap.Dirty + SEP + fakemap.Leadership + SEP + fakemap.BigGames + SEP + fakemap.Ambition + SEP + fakemap.Greed + SEP
-    ret += fakemap.Stats + SEP
-    console.log(ret);
-    return ret
-};
-
-function copyPopupDB(text, html) {
+function copySelection(text, html) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
@@ -71,173 +57,7 @@ function copyPopupDB(text, html) {
     document.execCommand("copy");
 }
 
-function strPopupAll(lines) {
-    fakemap = parsePopupAll(lines)
-    UNK = '?' + SEP
-    // DB
-    ret  = fakemap.Name + SEP
-    ret += fakemap.Age + SEP  
-    ret += fakemap.Nationality + SEP
-    ret += fakemap.Height + SEP  
-    ret += fakemap.Weight + SEP  
-    ret += fakemap.Hand + SEP  
-    ret += fakemap.Role + SEP
-    ret += fakemap.Overall  + SEP
-    ret += UNK.repeat(6) // J - N
-    ret += fakemap.Skating + SEP  
-    ret += fakemap.Passing + SEP  
-    ret += fakemap.Puckhandling  + SEP
-    ret += fakemap.Shooting + SEP
-    ret += fakemap.Defense + SEP  
-    ret += fakemap.Physical + SEP  
-    ret += fakemap.Spirit + SEP  
-    ret += fakemap.Endurance + SEP  
-    ret += fakemap.Faceoffs + SEP
-    ret += UNK.repeat(12) // W - AI
-    ret += fakemap.Ego + SEP 
-    ret += fakemap.Dirty + SEP 
-    ret += fakemap.Leadership + SEP 
-    ret += fakemap.BigGames + SEP 
-    ret += fakemap.Ambition + SEP 
-    ret += fakemap.Greed + SEP
-    ret += UNK // Personality
-    ret += UNK // Culture
-    ret += UNK // WI
-    console.log(ret);
-    return ret
-}
-
-//let TRAITS = [ "Arrogant", "Cocky", "Responsible", "Friendly", "Compassionate", "Agitator", "Tough", "Respectful", "Gentle", "Anonymous", "Modest", "Respected", "Role model", "True Leader", "Egocentric", "Childish", "Impressive", "Motivator", "Commander", "Nervous", "Anxious", "Stable", "Determined", "Heroic", "Lazy", "Half-hearted", "Half hearted", "Enthusiastic", "Purposeful", "Ambitious", "Easy-going", "Easy", "Eager", "Reasonable", "Hard to please", "Greedy", "Humble", "Compliant", "Reasonable", "Hard to please" ]
-let POS = ['Forward', 'Defender', 'Center']
-let SEP = '\t';
-
-function parsePopupAll(lines) {
-    console.log(lines);
-    fakemap = {
-    'Name': '\t', 
-    'Nationality': '\t', 
-    'Role': '\t', 
-    'Position': '\t', 
-    'Age': '\t', 
-    'Height': '\t', 
-    'Weight': '\t', 
-    'Hand': '\t', 
-    'Overall': '\t', 
-    'Skating': '\t', 
-    'Passing': '\t', 
-    'Puckhandling': '\t', 
-    'Shooting': '\t', 
-    'Defense': '\t', 
-    'Physical': '\t', 
-    'Spirit': '\t', 
-    'Endurance': '\t', 
-    'Faceoffs': '\t',  
-    'Ego': '\t', 
-    'Dirty': '\t', 
-    'Leadership': '\t', 
-    'BigGames': '\t', 
-    'Ambition': '\t', 
-    'Greed': '\t',
-    'Stats': '\t'
-    }
-
-    var ovrIdx = lines.indexOf('Overall')
-    try {
-        idx = 8 - ovrIdx
-        
-        if (idx == 0) {
-        // name, nationality
-        names = lines[0].split(' ');
-        fakemap.Name = names[0] + ' ' + names[1];
-        console.log(names);
-        if (names.length > 4) {fakemap.Name += ' ' + names[2]} 
-        fakemap.Nationality = names[names.length-1]
-        
-        // role
-        fakemap.Role = lines[2].trim()
-
-        // position, age, height, weight
-        lines[5] = lines[5].replace('·', '');
-        lines[5] = lines[5].replace('·', '');
-        tmp = lines[5].replace('·', '').split(' ');
-        fakemap.Position = tmp[0].trim()
-        fakemap.Age = tmp[2].trim() + tmp[3].trim()
-        fakemap.Height = tmp[5].trim() 
-        fakemap.Weight = tmp[7].trim() + tmp[8].trim()
-        fakemap.Hand = tmp[10].trim()
-        }
-
-        fakemap.Overall = lines[9-idx].trim()
-        fakemap.Skating = lines[11-idx].trim()
-        fakemap.Passing = lines[13-idx].trim()
-        fakemap.Puckhandling = lines[15-idx].trim()
-        fakemap.Shooting = lines[17-idx].trim()
-        fakemap.Defense = lines[19-idx].trim()
-        fakemap.Physical = lines[21-idx].trim()
-        fakemap.Spirit = lines[23-idx].trim()
-        fakemap.Endurance = lines[25-idx].trim()
-        fakemap.Faceoffs = lines[27-idx].trim()
-
-        let i=0;
-        traits = []
-        traitsIdx = 26 - idx;
-        for (i = 0; i < 6; i++) {
-            if ((traitsIdx + i) < lines.length) {
-                let e = lines[32+i-idx].trim();
-                for (T of TRAITS) {
-                    if (e.toLowerCase().startsWith(T.toLowerCase())) {
-                        //traits.push(T);
-                        //break;
-                        if (i === 0) {fakemap.Ego = T }
-                        else if (i === 1) {fakemap.Dirty = T }
-                        else if (i === 2) {fakemap.Leadership = T }
-                        else if (i === 3) {fakemap.BigGames = T }
-                        else if (i === 4) {fakemap.Ambition = T }
-                        else if (i === 5) {fakemap.Greed = T }
-                    }
-                }
-            }
-        }
-
-        league = lines[40-idx].split(',').slice(0, 1)
-        seasonstats = lines[43-idx].split('\t');
-        console.log(seasonstats)
-        fakemap.Stats = seasonstats[1].trim() + 'G/' + seasonstats[2].trim() + 'A/' + seasonstats[3].trim() + "P " + league 
-    }
-    catch (TypeError) {}
-
-    console.log(fakemap)
-    return fakemap
-};
-function parseValuesOnly(elements) {
-    ret = "";
-    let i = -1;
-    for (e of elements) {
-        i += 1;
-
-        e = e.trim()
-        if (e == "") { continue; }
-
-        var x = Number(e);
-        if (isNaN(x)) {
-            for (T of TRAITS) {
-                if (e.toLowerCase().startsWith(T.toLowerCase())) {
-                    ret += T + SEP;
-                    console.log("TRAIT: " + T);
-                    break;
-                }
-            }
-        }
-        else {
-            ret += e + SEP;
-            console.log("NUMBER: " + e);
-        }
-    }
-    return ret.trim();
-}
-
-function copyToClipboard2(text, html) {
-    console.log('copyToClipboard2()');
+function copyScoutingProfile(text, html) {
     function oncopy(event) {
         console.log('copyToClipboard2() in event');
         document.removeEventListener("copy", oncopy, true);
@@ -245,7 +65,6 @@ function copyToClipboard2(text, html) {
         // Hide the event from the page to prevent tampering.
         //event.stopImmediatePropagation(); // what is event??
         console.log('stopped propgation');
-        
 
         modified = ''
 
@@ -260,9 +79,6 @@ function copyToClipboard2(text, html) {
         spl = name.split(' brings');
         name = spl[0]
         modified += name.trim() + ', ';
-
-        
-        
         
         // get scouting data
         srcontainers = document.getElementsByClassName('scouting-report-container');
@@ -348,8 +164,6 @@ function copyToClipboard2(text, html) {
                 //modified += "&" + rel + ", "
             }
         }
-        
-        
             
         modified = modified.replaceAll(",", "\t");
         console.log(modified);
@@ -368,127 +182,18 @@ function copyToClipboard2(text, html) {
     console.log("COMPLETE!");
 }
 
-function copyToClipboard3(text, html) {
+function copyOpenPopupFA(text, html) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
-        event.stopImmediatePropagation();
+        //event.stopImmediatePropagation(); // if event exists??
 
-        modified = ''
-
-        // get scouting data
-        srdiv = document.getElementById('scoutingReports');
-        //console.log(srdiv);
-        mc_all = srdiv.querySelectorAll('.modal-content');
-        //console.log(mc_all);
-        mc = mc_all[0]
-        h3 = mc.querySelector('h3');
-        modified += h3.textContent.substring(19) + ', ';
-        
-        mc = mc_all[1]
-        //console.log(mc);
-        src = mc.querySelector('.scouting-report-container')
-        //console.log('src: ' + src.textContent);
-        notesdiv = src.querySelector('.scouting-report-container__notes');
-        //console.log('notesdiv: ' + notesdiv.textContent);
-        
-        row = mc.querySelector('.row');
-        //console.log(row);
-        col_all = row.querySelectorAll('.column')
-        //console.log(col_all);
-        left = col_all[0];
-        //console.log(left);
-        dli_all = left.querySelectorAll('.data-list__item')
-        //console.log(dli_all);
-        for (i = 0; i < dli_all.length; i++)
-        {
-            dli = dli_all[i]
-            //console.log(dli);
-            // 0-3
-            if (i < 4) {
-                
-                em = dli.querySelector('em')
-                //console.log(em);
-                sibling = em.nextSibling;
-                modified += sibling.textContent.trim() + ', ';
-            }
-            else {
-                // 4-7
-                tmpstr = ''
-                em = dli.querySelector('em')
-                //console.log(em);
-                sibling = em.nextSibling;
-                tmpstr += sibling.textContent.trim() + '|';
-                progress = dli.querySelector('.progress')
-                
-                color = pullGPHMColorFromClassName(progress);
-                if (color !== null) {
-                    tmpstr += color + '|';
-                }
-                span = progress.querySelector('span')
-                tmpstr += span.style.width.trim() + ', ';
-                modified += tmpstr;
-            }
-        }
-        
-        right = col_all[1];
-        advice_lists_all = right.querySelectorAll('.advice-list');
-        console.log(advice_lists_all);
-        
-        for (i = 0; i < advice_lists_all.length; i++)
-        {
-            liked = advice_lists_all[i];
-            likedstr = ''
-            li_all = liked.querySelectorAll('li')
-            for (j = 0; j < li_all.length; j++)
-            {
-                li = li_all[j];
-                name = li.textContent;
-                name = name.substring(0, name.length-3)
-                modified += name + ", "
-                
-                //a = li.querySelector('a')
-                //rel = a.rel;
-                //modified += "&" + rel + ", "
-            }
-        }
-        
-        modified = modified.replaceAll(",", "\t");
-        console.log(modified);
-        
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-        console.log("copy to clipboard event");
-
-    }
-    document.addEventListener("copy", oncopy, true);
-
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-}
-
-function pullGPHMColorFromClassName(ele) {
-    findme = ['success', 'ok', 'alert', 'warning'];
-    ret = 'ok';
-    cn_arr = ele.className.split(' ');
-    for (cn of cn_arr) {
-        if (findme.includes(cn)) { ret = cn; break; }
-    }
-    return ret;
-}
-
-function TESTER(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-
-        modified = parseOpenPopupHtml(0);
+        fakePlayerObj = parseOpenPopupHtml();
+        let modified = parseFakePlayerObjectFA(fakePlayerObj, 'UNK?', '\t');
 
         // Overwrite the clipboard content.
         event.preventDefault();
         event.clipboardData.setData("text/plain",  modified);
-        console.log("Clipboard Data: " + modified);
-
     }
     document.addEventListener("copy", oncopy, true);
     // Requires the clipboardWrite permission, or a user gesture:
@@ -496,54 +201,35 @@ function TESTER(text, html) {
     console.log("COMPLETE!");
 }
 
-function createFakePlayerObject() {
-    let fakeobj = { };
-    for (B of BIO) {
-        fakeobj[B] = '\t';
+function copyOpenPopupDB(text, html) {
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        //event.stopImmediatePropagation(); // if event exists??
+
+        fakePlayerObj = parseOpenPopupHtml();
+        let modified = parseFakePlayerObjectDB(fakePlayerObj, 'UNK?', '\t');
+
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+        console.log("Clipboard Data: " + modified);
     }
-    for (R of RATINGS) {
-        fakeobj[R] = '\t';
-    }
-    for (T of TRAITS) {
-        fakeobj[T] = '\t';
-    }
-    return fakeobj;
+    document.addEventListener("copy", oncopy, true);
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+    console.log("COMPLETE!");
 }
 
-function heightToMetric(feet, inches) {
-    CM_TO_INCH = 2.54;
-
-    iFeet = parseInt(feet);
-    iInches = parseInt(inches);
-    totalInches = iInches + (12 * iFeet);
-    totalInches += 1 // Account for GPHM off by one error when calculating height in inches
-    conversion = CM_TO_INCH * totalInches;
-    conversion = Math.round(conversion);
-    ret = conversion.toString() + " cm";
-    //ret = conversion;
-    console.log(feet + "'" + inches + '"  =  ' + ret);
-    return ret;
-}
-
-function weightToMetric(lbs) {
-    G_TO_LBS = 453.592;
-
-    iLbs = parseInt(lbs);
-    conversion = G_TO_LBS * iLbs;
-    conversion = conversion/1000;
-    conversion = Math.round(conversion);
-    ret = conversion.toString() + " kg";
-    //ret = conversion;
-    console.log(lbs + '  =  ' + ret);
-    return ret;
-}
-
-function parseOpenPopupHtml(popupClassIndex) {
-
+function parseOpenPopupHtml() {
     popupClassName = "f-dropdown content player-dropdown open";
+    return parsePopupHtml(popupClassName, 0);
+}
+
+function parsePopupHtml(popupClassName, popupClassIndex) {
+
     elements = document.getElementsByClassName(popupClassName)
     popup = elements[popupClassIndex];
-
 
     fakePlayerObj = createFakePlayerObject()
 
@@ -573,7 +259,6 @@ function parseOpenPopupHtml(popupClassIndex) {
     blackBar = popup.querySelector('.smallbold-block');
     blackBar_txt = blackBar.textContent.trim();
     spl = blackBar_txt.split('·') // hovering period symbol
-    console.log(spl);
     fakePlayerObj.Position = spl[0].trim();
     fakePlayerObj.Age = spl[1].trim();
 
@@ -638,9 +323,161 @@ function parseOpenPopupHtml(popupClassIndex) {
         let key = TRAITS[i];
         fakePlayerObj[key] = meter_txt;
     }
+
+    /* Season and link */
+    seasonHeading = popup.querySelector('.player-dropdown__seasoninfo');
+    console.log(seasonHeading)
+    h3 = seasonHeading.getElementsByTagName('h3')
+    h3 = h3[0];
+    spl = h3.textContent.trim().split(',');
+    fakePlayerObj.League = spl[0];
+
+    stats = popup.querySelector('.summary.table-display');
+    tdList = stats.getElementsByTagName('td');
+    thList = stats.getElementsByTagName('th');
+
+    for (let i = 0; i < tdList.length; i++) {
+        let k = thList[i].textContent.trim();
+        let v = tdList[i].textContent.trim();
+        fakePlayerObj[k] = v;
+    }
+    
+    let statline = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
+    fakePlayerObj['StatLine'] = statline;
     
     console.log(fakePlayerObj);
     return fakePlayerObj;
+}
+
+/* HELPER funcs */
+function createFakePlayerObject() {
+    let fakePlayerObj = { };
+
+    fakePlayerObj['Link'] = 'Link'
+    ALL_ATTRIBS_OBJ['Link'] = 'Link'
+
+    for (B of BIO) {
+        fakePlayerObj[B] = '\t';
+        //ALL_ATTRIBS_OBJ.push(B);
+        ALL_ATTRIBS_OBJ[B] = B;
+    }
+    for (R of RATINGS) {
+        fakePlayerObj[R] = '\t';
+        //ALL_ATTRIBS_OBJ.push(R);
+        ALL_ATTRIBS_OBJ[R] = R;
+    }
+    for (T of TRAITS) {
+        fakePlayerObj[T] = '\t';
+        //ALL_ATTRIBS_OBJ.push(T);
+        ALL_ATTRIBS_OBJ[T] = T;
+    }
+    for (S of SEASONSTATS) {
+        fakePlayerObj[S] = '\t';
+        //ALL_ATTRIBS_OBJ.push(T);
+        ALL_ATTRIBS_OBJ[S] = S;
+    }
+    return fakePlayerObj;
+}
+
+function parseFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
+    ret = '';
+    for (A of attribs) {
+        val = DEFAULT_VAL;
+        if (A in fakePlayerObj){
+            let tmp = fakePlayerObj[A].toString();
+            if (tmp !== '\t') {
+                val = tmp;
+            }
+        }
+        ret += val;
+        ret += SEP;
+    }
+    console.log(ret);
+    return ret;
+}
+
+function parseFakePlayerObjectDB(fakePlayerObj, DEFAULT_VAL, SEP) {
+        let attribs = [];
+        attribs.push(ALL_ATTRIBS_OBJ.Name);
+        attribs.push(ALL_ATTRIBS_OBJ.Age);
+        attribs.push(ALL_ATTRIBS_OBJ.Nationality);
+        attribs.push(ALL_ATTRIBS_OBJ.Height);
+        attribs.push(ALL_ATTRIBS_OBJ.Weight);
+        attribs.push(ALL_ATTRIBS_OBJ.Hand);
+        attribs.push(ALL_ATTRIBS_OBJ.Role);
+        attribs.push(ALL_ATTRIBS_OBJ.Overall);
+        attribs.push(ALL_ATTRIBS_OBJ.Confidence);
+        attribs.push(ALL_ATTRIBS_OBJ.Health);
+        attribs.push(ALL_ATTRIBS_OBJ.Name);
+        attribs.push(ALL_ATTRIBS_OBJ.Age);
+        attribs.push(ALL_ATTRIBS_OBJ.Height);
+        attribs.push(ALL_ATTRIBS_OBJ.Weight);
+        attribs.push(ALL_ATTRIBS_OBJ.Skating);
+        attribs.push(ALL_ATTRIBS_OBJ.Passing);
+        attribs.push(ALL_ATTRIBS_OBJ.PuckHandling);
+        attribs.push(ALL_ATTRIBS_OBJ.Shooting);
+        attribs.push(ALL_ATTRIBS_OBJ.Defence);
+        attribs.push(ALL_ATTRIBS_OBJ.Physical);
+        attribs.push(ALL_ATTRIBS_OBJ.Spirit);
+        attribs.push(ALL_ATTRIBS_OBJ.Endurance);
+        attribs.push(ALL_ATTRIBS_OBJ.Faceoffs);
+        attribs.push(ALL_ATTRIBS_OBJ.Name);
+        attribs.push(ALL_ATTRIBS_OBJ.Age);
+        attribs.push(ALL_ATTRIBS_OBJ.Overall);
+        attribs.push(ALL_ATTRIBS_OBJ.Reputation);
+        attribs.push('Status');
+        attribs.push('TradeValue');
+        attribs.push('Salary');
+        attribs.push('Years');
+        attribs.push('Clause');
+        attribs.push('Happiness');
+        attribs.push(ALL_ATTRIBS_OBJ.Name);
+        attribs.push(ALL_ATTRIBS_OBJ.Age);
+        attribs.push(ALL_ATTRIBS_OBJ.Ego);
+        attribs.push(ALL_ATTRIBS_OBJ.Dirty);
+        attribs.push(ALL_ATTRIBS_OBJ.Leadership);
+        attribs.push(ALL_ATTRIBS_OBJ.BigGames);
+        attribs.push(ALL_ATTRIBS_OBJ.Ambition);
+        attribs.push(ALL_ATTRIBS_OBJ.Greed);
+        attribs.push(ALL_ATTRIBS_OBJ.Persona);
+        attribs.push(ALL_ATTRIBS_OBJ.Culture);
+        attribs.push(ALL_ATTRIBS_OBJ.Winner);
+
+        let ret = parseFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP);
+        return ret;
+}
+
+function parseFakePlayerObjectFA(fakePlayerObj, DEFAULT_VAL, SEP) {
+        let attribs = [];
+        attribs.push(ALL_ATTRIBS_OBJ.Name);
+        attribs.push(ALL_ATTRIBS_OBJ.Position);
+        attribs.push(ALL_ATTRIBS_OBJ.Age);
+        attribs.push(ALL_ATTRIBS_OBJ.Height);
+        attribs.push(ALL_ATTRIBS_OBJ.Weight);
+        attribs.push(ALL_ATTRIBS_OBJ.Hand);
+        attribs.push(ALL_ATTRIBS_OBJ.Overall);
+        attribs.push(ALL_ATTRIBS_OBJ.Skating);
+        attribs.push(ALL_ATTRIBS_OBJ.Passing);
+        attribs.push(ALL_ATTRIBS_OBJ.PuckHandling);
+        attribs.push(ALL_ATTRIBS_OBJ.Shooting);
+        attribs.push(ALL_ATTRIBS_OBJ.Defence);
+        attribs.push(ALL_ATTRIBS_OBJ.Physical);
+        attribs.push(ALL_ATTRIBS_OBJ.Spirit);
+        attribs.push(ALL_ATTRIBS_OBJ.Endurance);
+        attribs.push(ALL_ATTRIBS_OBJ.Faceoffs);
+        attribs.push(ALL_ATTRIBS_OBJ.Ego);
+        attribs.push(ALL_ATTRIBS_OBJ.Dirty);
+        attribs.push(ALL_ATTRIBS_OBJ.Leadership);
+        attribs.push(ALL_ATTRIBS_OBJ.BigGames);
+        attribs.push(ALL_ATTRIBS_OBJ.Ambition);
+        attribs.push(ALL_ATTRIBS_OBJ.Greed);
+        attribs.push(ALL_ATTRIBS_OBJ.Persona);
+        attribs.push(ALL_ATTRIBS_OBJ.Culture);
+        attribs.push(ALL_ATTRIBS_OBJ.Winner);
+        attribs.push('StatLine');
+
+        let ret = parseFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP);
+        return ret;
 }
 
 /*
@@ -655,3 +492,41 @@ Click the button the reveal and return the new DOM
     elements = document.getElementsByClassName(popupClassName);
     return elements[newDomIndex];
  }
+
+function heightToMetric(feet, inches) {
+    CM_TO_INCH = 2.54;
+
+    iFeet = parseInt(feet);
+    iInches = parseInt(inches);
+    totalInches = iInches + (12 * iFeet);
+    totalInches += 1 // Account for GPHM off by one error when calculating height in inches
+    conversion = CM_TO_INCH * totalInches;
+    conversion = Math.round(conversion);
+    ret = conversion.toString() + " cm";
+    //ret = conversion;
+    //console.log(feet + "'" + inches + '"  =  ' + ret);
+    return ret;
+}
+
+function weightToMetric(lbs) {
+    G_TO_LBS = 453.592;
+
+    iLbs = parseInt(lbs);
+    conversion = G_TO_LBS * iLbs;
+    conversion = conversion/1000;
+    conversion = Math.round(conversion);
+    ret = conversion.toString() + " kg";
+    //ret = conversion;
+    //console.log(lbs + '  =  ' + ret);
+    return ret;
+}
+
+function pullGPHMColorFromClassName(ele) {
+    findme = ['success', 'ok', 'alert', 'warning'];
+    ret = 'ok';
+    cn_arr = ele.className.split(' ');
+    for (cn of cn_arr) {
+        if (findme.includes(cn)) { ret = cn; break; }
+    }
+    return ret;
+}

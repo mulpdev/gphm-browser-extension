@@ -1,42 +1,42 @@
 browser.contextMenus.create({
-        id: "gphm-smart-copy-scouting-profile",
+        id: "gphm-scouting-profile",
         title: "GPHM Smart Copy Scouting Profile",
-        contexts: ["page"], // "page", "selection", etc
+        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType 
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
-        id: "gphm-smart-copy-player-popup-draft",
-        title: "GPHM Smart Copy Player - FA/Draft",
-        contexts: ["selection"], // "page", "selection", etc
+        id: "gphm-open-popup-fadraft",
+        title: "GPHM Smart Copy Open Popup - FA/Draft",
+        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
-        id: "gphm-smart-copy-player-popup-db",
-        title: "GPHM Smart Copy Player - DB",
-        contexts: ["selection"], // "page", "selection", etc
+        id: "gphm-open-popup-db",
+        title: "GPHM Smart Copy Open Popup - DB",
+        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
         id: "gphm-smart-copy-TESTER",
         title: "GPHM Smart Copy TESTER",
-        contexts: ["page"], // "page", "selection", etc
+        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.onClicked.addListener((info, tab) => {
     var copyFunc = ''
 
-    if (info.menuItemId === "gphm-smart-copy-player-popup-draft") {
-        copyFunc = "copyPopupDraft";
+    if (info.menuItemId === "gphm-scouting-profile") {
+        copyFunc = "copyScoutingProfile";
     }
-    else if (info.menuItemId === "gphm-smart-copy-player-popup-db") {
-        copyFunc = "copyPopupDB";
+    else if (info.menuItemId === "gphm-open-popup-fadraft") {
+        copyFunc = "copyOpenPopupFA";
     }
-    else if (info.menuItemId === "gphm-smart-copy-scouting-profile") {
-        copyFunc = "copyToClipboard2";
+    else if (info.menuItemId === "gphm-open-popup-db") {
+        copyFunc = "copyOpenPopupDB";
     }
     else if (info.menuItemId === "gphm-smart-copy-TESTER") {
         copyFunc = "TESTER";
