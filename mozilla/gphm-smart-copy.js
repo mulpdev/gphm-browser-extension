@@ -1,10 +1,92 @@
-const BIO = ['Link', 'Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand']
+const BIO = ['Link', 'Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand'];
 const RATINGS = ['Overall', 'Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'Physical', 'Spirit', 'Endurance', 'Faceoffs'];
 const TRAITS = ['Ego', 'Dirty', 'Leadership', 'BigGames', 'Ambition', 'Greed', 'Persona', 'Culture', 'Winner'];
-const PROFILE = ['Persona', 'Culture', 'Winner']
-const SEASONSTATS = ['Reputation', 'Confidence', 'Health', 'League', 'GP', 'G', 'A', 'PTS', 'PIM', 'PER']
+const PROFILE = ['Persona', 'Culture', 'Winner'];
+const SEASONSTATS = ['Reputation', 'Confidence', 'Health', 'League', 'GP', 'G', 'A', 'PTS', 'PIM', 'PER'];
+const TRADE = [ 'Status', 'TradeValue', 'Salary', 'Years', 'Clause', 'Happiness'];
+const CUSTOM = ['STATLINE', 'HYPERLINK'];
+const ATTRIBS = [].concat(BIO, RATINGS, TRAITS, SEASONSTATS, CUSTOM);
 
 let ALL_ATTRIBS_OBJ = {};
+for (A of ATTRIBS) {
+    ALL_ATTRIBS_OBJ[A] = A;
+}
+
+const DB_FPO_ATTRIBS = [];
+//DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.HYPERLINK);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Nationality);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Height);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Weight);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Hand);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Role);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Overall);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Confidence);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Health);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Height);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Weight);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Skating);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Passing);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.PuckHandling);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Shooting);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Defence);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Physical);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Spirit);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Endurance);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Faceoffs);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Overall);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Reputation);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Status);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.TradeValue);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Salary);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Years);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Clause);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Happiness);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ego);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Dirty);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Leadership);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.BigGames);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ambition);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Greed);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Persona);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Culture);
+DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Winner);
+
+const FA_FPO_ATTRIBS = [];
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Link);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Position);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Height);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Weight);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Hand);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Overall);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Skating);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Passing);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.PuckHandling);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Shooting);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Defence);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Physical);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Spirit);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Endurance);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Faceoffs);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ego);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Dirty);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Leadership);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.BigGames);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ambition);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Greed);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Persona);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Culture);
+FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Winner);
+FA_FPO_ATTRIBS.push('STATLINE');
 
 /*
 NOTE1: calls document.getElementsByClassName() so comma seperated string of each className
@@ -182,38 +264,41 @@ function copyScoutingProfile(text, html) {
     console.log("COMPLETE!");
 }
 
-function copyOpenPopupFA(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-        // Hide the event from the page to prevent tampering.
-        //event.stopImmediatePropagation(); // if event exists??
-
-        fakePlayerObj = parseOpenPopupHtml();
-        let modified = parseFakePlayerObjectFA(fakePlayerObj, 'UNK?', '\t');
-
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-    }
-    document.addEventListener("copy", oncopy, true);
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-    console.log("COMPLETE!");
+const OUTPUT_FORMAT = {
+    "DB":0,
+    "FA_DRAFT":1,
 }
-
 function copyOpenPopupDB(text, html) {
+    copyOpenPopup(text, html, OUTPUT_FORMAT.DB);
+}
+function copyOpenPopupFA(text, html) {
+    copyOpenPopup(text, html, OUTPUT_FORMAT.FA_DRAFT);
+}
+function copyOpenPopup(text, html, outputFormat) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
         //event.stopImmediatePropagation(); // if event exists??
 
         fakePlayerObj = parseOpenPopupHtml();
-        let modified = parseFakePlayerObjectDB(fakePlayerObj, 'UNK?', '\t');
+        if (fakePlayerObj === null) {
+            return;
+        }
 
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-        console.log("Clipboard Data: " + modified);
+        let modified = null;
+        if (outputFormat === 0) {
+            modified = parseFakePlayerObjectToOutput(fakePlayerObj, DB_FPO_ATTRIBS, 'UNK?', '\t');
+        }
+        else {
+            modified = parseFakePlayerObjectToOutput(fakePlayerObj, FA_FPO_ATTRIBS, 'UNK?', '\t');
+        }
+        
+        if (modified !== null) {
+            // Overwrite the clipboard content.
+            event.preventDefault();
+            event.clipboardData.setData("text/plain",  modified);
+            console.log("Clipboard Data: " + modified);
+        }
     }
     document.addEventListener("copy", oncopy, true);
     // Requires the clipboardWrite permission, or a user gesture:
@@ -227,9 +312,12 @@ function parseOpenPopupHtml() {
 }
 
 function parsePopupHtml(popupClassName, popupClassIndex) {
-
     elements = document.getElementsByClassName(popupClassName)
     popup = elements[popupClassIndex];
+    if (popup === undefined) {
+        console.error("open (clicked on) player popup NOT detected");
+        return null;
+    }
 
     fakePlayerObj = createFakePlayerObject()
 
@@ -240,7 +328,6 @@ function parsePopupHtml(popupClassName, popupClassIndex) {
 
     tmp = popup.querySelector('.heading-two-piece__sur');
     fakePlayerObj.Name += tmp.textContent;
-    console.log(fakePlayerObj.Name);
 
     tmp = popup.querySelector('.team-jersey__playernumber');
     fakePlayerObj.Number = tmp.textContent;
@@ -326,7 +413,6 @@ function parsePopupHtml(popupClassName, popupClassIndex) {
 
     /* Season and link */
     seasonHeading = popup.querySelector('.player-dropdown__seasoninfo');
-    console.log(seasonHeading)
     h3 = seasonHeading.getElementsByTagName('h3')
     h3 = h3[0];
     spl = h3.textContent.trim().split(',');
@@ -343,47 +429,29 @@ function parsePopupHtml(popupClassName, popupClassIndex) {
     }
     
     let statline = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
-    fakePlayerObj['StatLine'] = statline;
+    fakePlayerObj['STATLINE'] = statline;
 
     links = popup.querySelector('.player-dropdown__buttons');
-    playerPageButton = links.getElementsByTagName('a')[0];
-    link = playerPageButton.href;
-    console.log(link);
-    fakePlayerObj.Link = link;
+    playerPageAnchor = links.getElementsByTagName('a')[0];
+    anchorLink = playerPageAnchor.href;
+    fakePlayerObj.Link = anchorLink;
+    fakePlayerObj.HYPERLINK = `=HYPERLINK("${anchorLink}", "#${fakePlayerObj.Number} ${fakePlayerObj.Name}")`;
 
-    
-    console.log(fakePlayerObj);
     return fakePlayerObj;
 }
 
 /* HELPER funcs */
 function createFakePlayerObject() {
     let fakePlayerObj = { };
+    
+    for (A of ATTRIBS) {
+        fakePlayerObj[A] = '\t';
+    }
 
-    for (B of BIO) {
-        fakePlayerObj[B] = '\t';
-        //ALL_ATTRIBS_OBJ.push(B);
-        ALL_ATTRIBS_OBJ[B] = B;
-    }
-    for (R of RATINGS) {
-        fakePlayerObj[R] = '\t';
-        //ALL_ATTRIBS_OBJ.push(R);
-        ALL_ATTRIBS_OBJ[R] = R;
-    }
-    for (T of TRAITS) {
-        fakePlayerObj[T] = '\t';
-        //ALL_ATTRIBS_OBJ.push(T);
-        ALL_ATTRIBS_OBJ[T] = T;
-    }
-    for (S of SEASONSTATS) {
-        fakePlayerObj[S] = '\t';
-        //ALL_ATTRIBS_OBJ.push(T);
-        ALL_ATTRIBS_OBJ[S] = S;
-    }
     return fakePlayerObj;
 }
 
-function parseFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
+function parseFakePlayerObjectToOutput(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
     ret = '';
     for (A of attribs) {
         val = DEFAULT_VAL;
@@ -396,93 +464,7 @@ function parseFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
         ret += val;
         ret += SEP;
     }
-    console.log(ret);
     return ret;
-}
-
-function parseFakePlayerObjectDB(fakePlayerObj, DEFAULT_VAL, SEP) {
-        let attribs = [];
-        attribs.push(ALL_ATTRIBS_OBJ.Name);
-        attribs.push(ALL_ATTRIBS_OBJ.Age);
-        attribs.push(ALL_ATTRIBS_OBJ.Nationality);
-        attribs.push(ALL_ATTRIBS_OBJ.Height);
-        attribs.push(ALL_ATTRIBS_OBJ.Weight);
-        attribs.push(ALL_ATTRIBS_OBJ.Hand);
-        attribs.push(ALL_ATTRIBS_OBJ.Role);
-        attribs.push(ALL_ATTRIBS_OBJ.Overall);
-        attribs.push(ALL_ATTRIBS_OBJ.Confidence);
-        attribs.push(ALL_ATTRIBS_OBJ.Health);
-        attribs.push(ALL_ATTRIBS_OBJ.Name);
-        attribs.push(ALL_ATTRIBS_OBJ.Age);
-        attribs.push(ALL_ATTRIBS_OBJ.Height);
-        attribs.push(ALL_ATTRIBS_OBJ.Weight);
-        attribs.push(ALL_ATTRIBS_OBJ.Skating);
-        attribs.push(ALL_ATTRIBS_OBJ.Passing);
-        attribs.push(ALL_ATTRIBS_OBJ.PuckHandling);
-        attribs.push(ALL_ATTRIBS_OBJ.Shooting);
-        attribs.push(ALL_ATTRIBS_OBJ.Defence);
-        attribs.push(ALL_ATTRIBS_OBJ.Physical);
-        attribs.push(ALL_ATTRIBS_OBJ.Spirit);
-        attribs.push(ALL_ATTRIBS_OBJ.Endurance);
-        attribs.push(ALL_ATTRIBS_OBJ.Faceoffs);
-        attribs.push(ALL_ATTRIBS_OBJ.Name);
-        attribs.push(ALL_ATTRIBS_OBJ.Age);
-        attribs.push(ALL_ATTRIBS_OBJ.Overall);
-        attribs.push(ALL_ATTRIBS_OBJ.Reputation);
-        attribs.push('Status');
-        attribs.push('TradeValue');
-        attribs.push('Salary');
-        attribs.push('Years');
-        attribs.push('Clause');
-        attribs.push('Happiness');
-        attribs.push(ALL_ATTRIBS_OBJ.Name);
-        attribs.push(ALL_ATTRIBS_OBJ.Age);
-        attribs.push(ALL_ATTRIBS_OBJ.Ego);
-        attribs.push(ALL_ATTRIBS_OBJ.Dirty);
-        attribs.push(ALL_ATTRIBS_OBJ.Leadership);
-        attribs.push(ALL_ATTRIBS_OBJ.BigGames);
-        attribs.push(ALL_ATTRIBS_OBJ.Ambition);
-        attribs.push(ALL_ATTRIBS_OBJ.Greed);
-        attribs.push(ALL_ATTRIBS_OBJ.Persona);
-        attribs.push(ALL_ATTRIBS_OBJ.Culture);
-        attribs.push(ALL_ATTRIBS_OBJ.Winner);
-
-        let ret = parseFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP);
-        return ret;
-}
-
-function parseFakePlayerObjectFA(fakePlayerObj, DEFAULT_VAL, SEP) {
-        let attribs = [];
-        attribs.push(ALL_ATTRIBS_OBJ.Link);
-        attribs.push(ALL_ATTRIBS_OBJ.Name);
-        attribs.push(ALL_ATTRIBS_OBJ.Position);
-        attribs.push(ALL_ATTRIBS_OBJ.Age);
-        attribs.push(ALL_ATTRIBS_OBJ.Height);
-        attribs.push(ALL_ATTRIBS_OBJ.Weight);
-        attribs.push(ALL_ATTRIBS_OBJ.Hand);
-        attribs.push(ALL_ATTRIBS_OBJ.Overall);
-        attribs.push(ALL_ATTRIBS_OBJ.Skating);
-        attribs.push(ALL_ATTRIBS_OBJ.Passing);
-        attribs.push(ALL_ATTRIBS_OBJ.PuckHandling);
-        attribs.push(ALL_ATTRIBS_OBJ.Shooting);
-        attribs.push(ALL_ATTRIBS_OBJ.Defence);
-        attribs.push(ALL_ATTRIBS_OBJ.Physical);
-        attribs.push(ALL_ATTRIBS_OBJ.Spirit);
-        attribs.push(ALL_ATTRIBS_OBJ.Endurance);
-        attribs.push(ALL_ATTRIBS_OBJ.Faceoffs);
-        attribs.push(ALL_ATTRIBS_OBJ.Ego);
-        attribs.push(ALL_ATTRIBS_OBJ.Dirty);
-        attribs.push(ALL_ATTRIBS_OBJ.Leadership);
-        attribs.push(ALL_ATTRIBS_OBJ.BigGames);
-        attribs.push(ALL_ATTRIBS_OBJ.Ambition);
-        attribs.push(ALL_ATTRIBS_OBJ.Greed);
-        attribs.push(ALL_ATTRIBS_OBJ.Persona);
-        attribs.push(ALL_ATTRIBS_OBJ.Culture);
-        attribs.push(ALL_ATTRIBS_OBJ.Winner);
-        attribs.push('StatLine');
-
-        let ret = parseFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP);
-        return ret;
 }
 
 /*
