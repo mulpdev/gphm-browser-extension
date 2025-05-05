@@ -98,26 +98,6 @@ NOTE3: querySelector() only returns FIRST subelement, querySelectorAll() returns
 
 // This function must be called in a visible page, such as a browserAction popup
 // or a content script. Calling it in a background page has no effect!
-
-function TESTER(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-        // Hide the event from the page to prevent tampering.
-        //event.stopImmediatePropagation(); // if event exists??
-
-        console.log("TESTER RUNNING");
-        modified = "LOL TEST";
-
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-    }
-    document.addEventListener("copy", oncopy, true);
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-    console.log("TESTER COMPLETE!");
-}
-
 function copySelection(text, html) {
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
@@ -516,4 +496,250 @@ function pullGPHMColorFromClassName(ele) {
         if (findme.includes(cn)) { ret = cn; break; }
     }
     return ret;
+}
+
+/* ============================================================================================= */
+ function clickElementAndReturnNewDOM2(clickEle, newEleClassName, newEleIndex) {
+    clickEle.click();
+    
+    elements = document.getElementsByClassName(newEleClassName);
+    ret = null;
+    if (elements.length > 1) {
+        ret = elements[newEleIndex];
+    }
+    else {
+        ret = elements;
+    }
+    return ret;
+ }
+ function getSourceAsDOM(url)
+ {
+     xmlhttp=new XMLHttpRequest();
+     xmlhttp.open("GET",url,false);
+     xmlhttp.send();
+     parser=new DOMParser();
+     return parser.parseFromString(xmlhttp.responseText,"text/html");      
+ }
+
+function calcBalazsRatio(selfTeam, oppTeam) {
+    let tmp = [];
+    if ((selfTeam.G.at(-1) < oppTeam.G.at(-1)) && (selfTeam.S.at(-1) > oppTeam.S.at(-1)) ) {
+
+        let ratio = ( (1 + oppTeam.G.at(-1)) / (1 + selfTeam.G.at(-1)) )
+        tmp.push(ratio);
+
+        for (let i = 0; i < selfTeam.S.length-1; i++) {
+            let selfS = selfTeam.S.at(i);
+            let selfO = oppTeam.S.at(i);
+            let term = 0.0
+            
+            if (selfO !== 0) {
+                term = selfS/selfO;
+            }
+            tmp.push(term);
+            ratio += term;
+
+        }
+        tmp.push(ratio);
+        return ratio//.toFixed(1);
+    }
+    else {
+        return -999;
+    }
+} 
+
+function TESTER(text, html) {
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        //event.stopImmediatePropagation(); // if event exists??
+
+        console.log("TESTER RUNNING");
+        leagueSchedule();
+        //parseGameURL('https://gameplanhockey.com/game?gpid=332160-A')
+        modified = "LOL TEST";
+
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+    console.log("TESTER COMPLETE!");
+}
+
+function leagueSchedule() {
+    let element = document.getElementById("tabs-schedule");
+    clickElementAndReturnNewDOM2(element, "tabs-schedule", null)
+
+    let contentDiv = document.getElementById('content');
+
+    // Get all the Home/Away/Link 
+    let schedule = []
+    for (let i = 7; i < 87; i++) {
+        dayIdSel = `div [id='day-${i}']`; 
+        dayDiv = contentDiv.querySelector(dayIdSel);
+        let games = parseDayDivHTML(dayDiv);
+        schedule.push(games);
+    }
+
+    // Find Balazs ratio winner
+    var max_ratio = -1;
+    var max_ratio_games = [];
+    var ratio_games = [];
+
+    for (let day = 0; day < schedule.length; day++) {
+        for (played of schedule[day]) {
+            let link = played.Link;
+            let results = parseGameURL(link);
+            let key = results.Loser;
+
+            if (link === 'https://gameplanhockey.com/game?gpid=332160-A') {
+                console.log('==================');
+            }
+            
+            if ((results.Home.BalazsRatio > -1) || (results.Away.BalazsRatio > -1)){
+                console.log("Day"+(day+7) + " " + link + "  /  " + results.Home.Name + " (" + results.Home.Result + ") " + homeBR + "  /  " + results.Away.Name + " (" + results.Away.Result + ") " + awayBR + " [" + results.Loser + " | " + results[key].BalazsRatio + "]");
+            }
+
+            let currRatio = results[key].BalazsRatio;
+            //console.log("Loser: " + results[key].Name + ", currRatio: " + results[key].BalazsRatio);
+
+            if (currRatio > max_ratio) {
+                console.log("UPDATE from: " + max_ratio + " to: " + results[key].BalazsRatio);
+                max_ratio_games = [];
+                max_ratio_games.push(results);
+                max_ratio = currRatio;
+            }
+            else if (currRatio === max_ratio) {
+                console.log("SAME ratio: " + results[key].BalazsRatio + " ... appending results");
+                max_ratio_games.push(results);
+            }
+            else {
+                
+                ;
+                //console.log("max_ratio: " + max_ratio + " > " + currRatio + " (" + (max_ratio > currRatio) + ")");
+            }
+            
+            if ((results.Home.BalazsRatio > -1) || (results.Away.BalazsRatio > -1)) {
+                ratio_games.push(results);
+            }
+        }
+    }
+    console.log("--------------------------------");
+    console.log("Max Balazs Ratio: " + max_ratio);
+    console.log("Max Balazs Ratio Games: ");
+    for (tmp of max_ratio_games) {
+        let s = '';
+        let l = tmp.Loser;
+        console.log(tmp[l].Name + ' ' + tmp.HYPERLINK);
+    }
+   
+    mega_log = '';
+    for (tmp of ratio_games) {
+        mega_log += `${tmp.HYPERLINK}, ${tmp.Home.BalazsRatio}, ${tmp.Away.BalazsRatio}\n'`;
+    }
+    console.log(mega_log);
+
+    console.log(JSON.stringify(tmp))
+}
+function parseDayDivHTML(dayDiv) {
+    let ret = [];
+
+    let rows = dayDiv.querySelectorAll('tr');
+    for (row of rows) {
+        if (row.querySelectorAll('th').length > 0) {
+            continue;
+        }
+        let tmp = {};
+        let tds = row.querySelectorAll('td');
+        
+        tmp['Home'] = tds[0].querySelector('a').title;
+        tmp['Away'] = tds[1].querySelector('a').title;
+        tmp['Link'] = tds[3].querySelector('a').href;
+        ret.push(tmp)
+    }
+    return ret;
+}
+
+function parseGameURL(url) {
+    let dom = getSourceAsDOM(url);
+
+    let boxscoreDiv = dom.getElementById('boxscore');
+
+    let cols = boxscoreDiv.querySelectorAll('.column');
+    let leftcol = cols[0];
+    let rightcol = cols[1];
+
+    let panels = rightcol.querySelectorAll('.panel');
+    
+    // Shots by period
+    let sbp = {
+        Home: {},
+        Away: {}
+    }
+   
+    // Right Col has 4 sections
+
+    // Period Summary and Shots by Period
+    periodSummary = panels[1].querySelector('.summary.period.table-display');
+    shotsByPeriod = panels[2].querySelector('.summary.period.table-display');
+    let tableByPeriods = [periodSummary, shotsByPeriod];
+   
+    const STAT = ['G', 'S']
+    for (let i = 0; i < tableByPeriods.length; i++) {
+        let table = tableByPeriods[i];
+        let stat = STAT[i];
+        rows = table.querySelectorAll('tr');
+        const TEAMS = ['SKIPME', 'Home', 'Away'];
+
+        for (let j = 1; j < rows.length; j++) {
+            let ha = TEAMS[j]
+            let shots = rows[j].querySelectorAll('td');
+
+            sbp[ha]['Name'] = shots[0].querySelector('a').title;
+            sbp[ha][`${stat}`] = [];
+            sbp[ha][`${stat}`].push(parseInt(shots[1].textContent.trim()));
+            sbp[ha][`${stat}`].push(parseInt(shots[2].textContent.trim()));
+            sbp[ha][`${stat}`].push(parseInt(shots[3].textContent.trim()));
+
+            if (shots.length ===  5) {
+                sbp[ha][`${stat}`].push(parseInt(shots[4].textContent.trim()));
+            }
+            else if (shots.length ===  6) {
+                sbp[ha][`${stat}`].push(parseInt(shots[4].textContent.trim()));
+                sbp[ha][`${stat}`].push(parseInt(shots[5].textContent.trim()));
+            }
+            else if (shots.length ===  7) {
+                sbp[ha][`${stat}`].push(parseInt(shots[4].textContent.trim()));
+                sbp[ha][`${stat}`].push(parseInt(shots[5].textContent.trim()));
+                sbp[ha][`${stat}`].push(parseInt(shots[6].textContent.trim()));
+            }
+            else {
+                console.error("shots.length === " + shots.length);
+            }
+        }
+    }
+    sbp['HYPERLINK'] = url;
+
+    homeBR = calcBalazsRatio(sbp['Home'], sbp['Away']); 
+    sbp['Home']['BalazsRatio'] = homeBR;
+
+    awayBR = calcBalazsRatio(sbp['Away'], sbp['Home']);
+    sbp['Away']['BalazsRatio'] = awayBR;
+    
+    sbp['Winner'] = 'Home';
+    sbp['Loser'] = 'Away';
+    if (sbp.Away.G.at(-1) > sbp.Home.G.at(-1)) {
+        sbp['Winner'] = 'Away';
+        sbp['Loser'] = 'Home';
+    }
+    let ha = sbp.Winner;
+    sbp[ha]['Result'] = 'W';
+    ha = sbp.Loser;
+    sbp[ha]['Result'] = 'L';
+    
+    //console.log(url + "  /  " + sbp.Home.Name + " (" + sbp.Home.Result + ") " + homeBR + "  /  " + sbp.Away.Name + " (" + sbp.Away.Result + ") " + awayBR);
+    return sbp;
 }
