@@ -1,3 +1,9 @@
+// The downside of immutable strings is no replaceAt() type function be default, so here's the Prototype
+String.prototype.replaceAt = function(index, replacement) {
+    return this.substring(0, index) + replacement + this.substring(index + replacement.length);
+}
+
+
 const BIO = ['Link', 'Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand'];
 const RATINGS = ['Overall', 'Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'Physical', 'Spirit', 'Endurance', 'Faceoffs'];
 const TRAITS = ['Ego', 'Dirty', 'Leadership', 'BigGames', 'Ambition', 'Greed', 'Persona', 'Culture', 'Winner'];
@@ -12,81 +18,82 @@ for (A of ATTRIBS) {
     ALL_ATTRIBS_OBJ[A] = A;
 }
 
-const DB_FPO_ATTRIBS = [];
-//DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.HYPERLINK);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Nationality);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Height);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Weight);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Hand);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Role);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Overall);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Confidence);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Health);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Height);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Weight);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Skating);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Passing);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.PuckHandling);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Shooting);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Defence);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Physical);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Spirit);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Endurance);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Faceoffs);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Overall);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Reputation);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Status);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.TradeValue);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Salary);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Years);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Clause);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Happiness);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ego);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Dirty);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Leadership);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.BigGames);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ambition);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Greed);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Persona);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Culture);
-DB_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Winner);
-
-const FA_FPO_ATTRIBS = [];
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Link);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Name);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Position);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Age);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Height);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Weight);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Hand);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Overall);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Skating);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Passing);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.PuckHandling);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Shooting);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Defence);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Physical);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Spirit);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Endurance);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Faceoffs);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ego);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Dirty);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Leadership);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.BigGames);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Ambition);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Greed);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Persona);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Culture);
-FA_FPO_ATTRIBS.push(ALL_ATTRIBS_OBJ.Winner);
-FA_FPO_ATTRIBS.push('STATLINE');
+const DB_FPO_ATTRIBS = [
+    //ALL_ATTRIBS_OBJ.Name,
+    ALL_ATTRIBS_OBJ.HYPERLINK,
+    ALL_ATTRIBS_OBJ.Age,
+    ALL_ATTRIBS_OBJ.Nationality,
+    ALL_ATTRIBS_OBJ.Height,
+    ALL_ATTRIBS_OBJ.Weight,
+    ALL_ATTRIBS_OBJ.Hand,
+    ALL_ATTRIBS_OBJ.Role,
+    ALL_ATTRIBS_OBJ.Overall,
+    ALL_ATTRIBS_OBJ.Confidence,
+    ALL_ATTRIBS_OBJ.Health,
+    ALL_ATTRIBS_OBJ.Name,
+    ALL_ATTRIBS_OBJ.Age,
+    ALL_ATTRIBS_OBJ.Height,
+    ALL_ATTRIBS_OBJ.Weight,
+    ALL_ATTRIBS_OBJ.Skating,
+    ALL_ATTRIBS_OBJ.Passing,
+    ALL_ATTRIBS_OBJ.PuckHandling,
+    ALL_ATTRIBS_OBJ.Shooting,
+    ALL_ATTRIBS_OBJ.Defence,
+    ALL_ATTRIBS_OBJ.Physical,
+    ALL_ATTRIBS_OBJ.Spirit,
+    ALL_ATTRIBS_OBJ.Endurance,
+    ALL_ATTRIBS_OBJ.Faceoffs,
+    ALL_ATTRIBS_OBJ.Name,
+    ALL_ATTRIBS_OBJ.Age,
+    ALL_ATTRIBS_OBJ.Overall,
+    ALL_ATTRIBS_OBJ.Reputation,
+    ALL_ATTRIBS_OBJ.Status,
+    ALL_ATTRIBS_OBJ.TradeValue,
+    ALL_ATTRIBS_OBJ.Salary,
+    ALL_ATTRIBS_OBJ.Years,
+    ALL_ATTRIBS_OBJ.Clause,
+    ALL_ATTRIBS_OBJ.Happiness,
+    ALL_ATTRIBS_OBJ.Name,
+    ALL_ATTRIBS_OBJ.Age,
+    ALL_ATTRIBS_OBJ.Ego,
+    ALL_ATTRIBS_OBJ.Dirty,
+    ALL_ATTRIBS_OBJ.Leadership,
+    ALL_ATTRIBS_OBJ.BigGames,
+    ALL_ATTRIBS_OBJ.Ambition,
+    ALL_ATTRIBS_OBJ.Greed,
+    ALL_ATTRIBS_OBJ.Persona,
+    ALL_ATTRIBS_OBJ.Culture,
+    ALL_ATTRIBS_OBJ.Winner 
+];
+const FA_FPO_ATTRIBS = [
+    ALL_ATTRIBS_OBJ.Link,
+    ALL_ATTRIBS_OBJ.Name,
+    ALL_ATTRIBS_OBJ.Position,
+    ALL_ATTRIBS_OBJ.Age,
+    ALL_ATTRIBS_OBJ.Height,
+    ALL_ATTRIBS_OBJ.Weight,
+    ALL_ATTRIBS_OBJ.Hand,
+    ALL_ATTRIBS_OBJ.Overall,
+    ALL_ATTRIBS_OBJ.Skating,
+    ALL_ATTRIBS_OBJ.Passing,
+    ALL_ATTRIBS_OBJ.PuckHandling,
+    ALL_ATTRIBS_OBJ.Shooting,
+    ALL_ATTRIBS_OBJ.Defence,
+    ALL_ATTRIBS_OBJ.Physical,
+    ALL_ATTRIBS_OBJ.Spirit,
+    ALL_ATTRIBS_OBJ.Endurance,
+    ALL_ATTRIBS_OBJ.Faceoffs,
+    ALL_ATTRIBS_OBJ.Ego,
+    ALL_ATTRIBS_OBJ.Dirty,
+    ALL_ATTRIBS_OBJ.Leadership,
+    ALL_ATTRIBS_OBJ.BigGames,
+    ALL_ATTRIBS_OBJ.Ambition,
+    ALL_ATTRIBS_OBJ.Greed,
+    ALL_ATTRIBS_OBJ.Persona,
+    ALL_ATTRIBS_OBJ.Culture,
+    ALL_ATTRIBS_OBJ.Winner,
+    ALL_ATTRIBS_OBJ.STATLINE,
+];
 
 /*
 NOTE1: calls document.getElementsByClassName() so comma seperated string of each className
@@ -119,126 +126,156 @@ function copySelection(text, html) {
     document.execCommand("copy");
 }
 
+function parseGphmMeter(dli) {
+    let em = dli.querySelector('em');
+    let sibling = em.nextSibling;
+    let progress = dli.querySelector('.progress')
+    let span = progress.querySelector('span')
+    
+    let key = em.textContent.trim();
+    key = key.replaceAll(' ', '_');
+    key = key.toLowerCase();
+    key = key.replaceAt(0, key[0].toUpperCase());
+    
+    let idx = key.indexOf("_");
+    if ( idx !== -1) {
+        key = key.replaceAt(idx+1, key[idx+1].toUpperCase());
+    }
+
+    let val = sibling.textContent.trim();
+    let color = pullGPHMColorFromClassName(progress);
+    let width = span.style.width.trim();
+
+   return {'Key':key, 'Value':val, 'Color':color, 'Width':width}; 
+}
+
 function copyScoutingProfile(text, html) {
     function oncopy(event) {
-        console.log('copyToClipboard2() in event');
         document.removeEventListener("copy", oncopy, true);
-        console.log('removed event listener');
         // Hide the event from the page to prevent tampering.
         //event.stopImmediatePropagation(); // what is event??
-        console.log('stopped propgation');
 
-        modified = ''
+        let fakeScoutingProfileObj = {};
 
         // get name
-        notes = document.getElementsByClassName('panel scouting-report-container__notes');
-        note = notes[0];
-        paras = note.querySelectorAll('p');
-        p = paras[1];
-        t = p.textContent;
-        spl = t.split(' is');
+        let notes = document.getElementsByClassName('panel scouting-report-container__notes');
+        let note = notes[0];
+        let paras = note.querySelectorAll('p');
+        let p = paras[1];
+        let t = p.textContent;
+        let spl = t.split(' is');
         name = spl[0];
         spl = name.split(' brings');
         name = spl[0]
-        modified += name.trim() + ', ';
+        fakeScoutingProfileObj['Name'] = name.trim();
         
         // get scouting data
-        srcontainers = document.getElementsByClassName('scouting-report-container');
-        console.log(srcontainers);
+        let srcontainers = document.getElementsByClassName('scouting-report-container');
         srcontainer = srcontainers[0];
-        console.log(srcontainer);
         
-        // columns
-        cols = srcontainer.getElementsByClassName('column');
-        console.log(cols)
-        left = cols[0];
-        console.log(left)
-        right = cols[1];
-        console.log(right)
+        let cols = srcontainer.getElementsByClassName('column');
+        let left = cols[0];
+        let right = cols[1];
 
         // left col
-        ldivs = left.querySelectorAll('div');
-        console.log('left stuff')
-        console.log(ldivs)
-        console.log(ldivs[0])
-        //console.log(ldivs.slice(0,1))
+        //let ldivs = left.querySelectorAll('div');
+        let lpanels = left.querySelectorAll('.panel');
         
-        personality_type = ldivs[0]; // skip
-        console.log("skip personality type");
+        let personality_type = lpanels[0];
+        let pt_spans = personality_type.querySelectorAll('span');
+        fakeScoutingProfileObj['Dominant'] = pt_spans[0].title;
+        fakeScoutingProfileObj['Influenced'] = pt_spans[1].title;
 
-        personality_spectrum = ldivs[1];
-        console.log(personality_spectrum)
-        dli_all = personality_spectrum.querySelectorAll('.data-list__item');
-        console.log(dli_all);
+        let personality_spectrum = lpanels[1];
+        let dli_all = personality_spectrum.querySelectorAll('.data-list__item');
+        let ps_category = ['Competitor', 'Inspirer', 'Peacemaker', 'Tactician'];
         for (i = 0; i < dli_all.length; i++)
         {
-            dli = dli_all[i]
-            console.log(dli);
-            em = dli.querySelector('em')
-            console.log(em);
-            sibling = em.nextSibling;
-            modified += sibling.textContent.trim() + ', ';
-        }
-        
-        team_culture = ldivs[2]
-        console.log(team_culture)
-        dli_all = personality_spectrum.querySelectorAll('.data-list__item');
-        for (i = 0; i < dli_all.length; i++)
-        {
-            tmpstr = ''
-            em = dli.querySelector('em')
-            console.log(em);
-            sibling = em.nextSibling;
-            tmpstr += sibling.textContent.trim() + '|';
-            progress = dli.querySelector('.progress')
+            let dli = dli_all[i];
+            let M = parseGphmMeter(dli);
+            fakeScoutingProfileObj[M.Key] = {};
+            fakeScoutingProfileObj[M.Key]['Value'] = M.Value;
+            fakeScoutingProfileObj[M.Key]['Color'] = M.Color;
+            fakeScoutingProfileObj[M.Key]['Width'] = M.Width;
             
-            color = pullGPHMColorFromClassName(progress);
-            if (color !== null) {
-                tmpstr += color + '|';
-            }
-            span = progress.querySelector('span')
-            tmpstr += span.style.width.trim() + ', ';
-            modified += tmpstr;
         }
-
+        
+        let team_culture_panel = lpanels[2];
+        dli_all = team_culture_panel.querySelectorAll('li')
+        let tc_category = ['Culture_Influence', 'Culture_Impact', 'Teamwork_Impact', 'Winner_Instinct'];
+        let tc_subcat = ['Value', 'Progress', 'Width'];
+        let tc_keys = [];
+        for (i = 0; i < dli_all.length; i++) {
+            let dli = dli_all[i];
+            let M = parseGphmMeter(dli);
+            fakeScoutingProfileObj[M.Key] = {};
+            fakeScoutingProfileObj[M.Key]['Value'] = M.Value;
+            fakeScoutingProfileObj[M.Key]['Color'] = M.Color;
+            fakeScoutingProfileObj[M.Key]['Width'] = M.Width;
+        }
+        
         // right col
-        advice_lists_all = right.querySelectorAll('.advice-list');
-        console.log('advice list');
-        console.log(advice_lists_all);
+        let advice_lists_all = right.querySelectorAll('.advice-list');
+        let category = ['Likes', 'Dislikes']
+        fakeScoutingProfileObj['Likes'] = ['', '', '', '', '', '', ''];
+        fakeScoutingProfileObj['Dislikes'] = ['', '', '', '', '', '', ''];
         
         for (i = 0; i < advice_lists_all.length; i++)
         {
-            liked = advice_lists_all[i];
-            likedstr = ''
-            li_all = liked.querySelectorAll('li')
-            console.log(li_all)
+            let cat = category[i];
+            let liked = advice_lists_all[i];
+            let likedstr = ''
+            let li_all = liked.querySelectorAll('li')
             for (j = 0; j < li_all.length; j++)
             {
-                li = li_all[j];
-                name = li.textContent;
-                console.log(name);
-                name = name.substring(0, name.length-3)
-                modified += name + ", "
-                console.log(modified);
-                
-                //a = li.querySelector('a')
-                //rel = a.rel;
-                //modified += "&" + rel + ", "
+                let li = li_all[j];
+                let name = li.textContent;
+                name = name.substring(0, name.length-4) // Remove position in parens
+                //modified += name + ", "
+                fakeScoutingProfileObj[cat][j] = name;
             }
         }
-            
+        
+        // Make string
+        console.log(fakeScoutingProfileObj);
+        
+        let SEP = ', '
+        let modified = '';
+
+        modified += fakeScoutingProfileObj.Name + SEP;
+        modified += fakeScoutingProfileObj.Competitor.Value + SEP;
+        modified += fakeScoutingProfileObj.Inspirer.Value + SEP;
+        modified += fakeScoutingProfileObj.Peacemaker.Value + SEP;
+        modified += fakeScoutingProfileObj.Tactician.Value + SEP;
+
+        let TC = ['Culture_Influence', 'Culture_Impact', 'Teamwork_Impact', 'Winner_Instinct'];
+        for (let i = 0; i < TC.length; i++) {
+            let tmps = '';
+            tmps += fakeScoutingProfileObj[TC[i]].Value; 
+            //tmps += "|";
+            //tmps += fakeScoutingProfileObj[TC[i]].Color;
+            //tmps += "|";
+            //tmps += fakeScoutingProfileObj[TC[i]].Width;
+            modified += tmps + SEP
+        }
+        
+        for (let i = 0; i < fakeScoutingProfileObj.Likes.length; i++) {
+            modified += fakeScoutingProfileObj.Likes[i] + SEP;
+        }
+
+        for (let i = 0; i < fakeScoutingProfileObj.Dislikes.length; i++) {
+            modified += fakeScoutingProfileObj.Dislikes[i] + SEP;
+        }
+        
+
         modified = modified.replaceAll(",", "\t");
         console.log(modified);
         
         // Overwrite the clipboard content.
         event.preventDefault();
-        console.log("copy: event prevent default");
         event.clipboardData.setData("text/plain",  modified);
-        console.log("copy to clipboard event");
-
     }
     document.addEventListener("copy", oncopy, true);
-    console.log("reset onCopy event");
     // Requires the clipboardWrite permission, or a user gesture:
     document.execCommand("copy");
     console.log("COMPLETE!");
