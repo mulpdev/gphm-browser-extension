@@ -164,9 +164,16 @@ function copyScoutingProfile(text, html) {
         let p = paras[1];
         let t = p.textContent;
         let spl = t.split(' is');
-        name = spl[0];
-        spl = name.split(' brings');
-        name = spl[0]
+        let name = spl[0];
+        
+        if (name.indexOf('brings') !== -1){
+            spl = name.split(' brings');
+            name = spl[0]
+        }
+        else if (name.indexOf('blends') !== -1){
+            spl = name.split(' blends');
+            name = spl[0]
+        }
         fakeScoutingProfileObj['Name'] = name.trim();
         
         // get scouting data
@@ -535,6 +542,20 @@ function pullGPHMColorFromClassName(ele) {
     return ret;
 }
 
+// https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server
+function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+  
+    element.style.display = 'none';
+    document.body.appendChild(element);
+  
+    element.click();
+  
+    document.body.removeChild(element);
+}
+
 /* ============================================================================================= */
  function clickElementAndReturnNewDOM2(clickEle, newEleClassName, newEleIndex) {
     clickEle.click();
@@ -679,7 +700,10 @@ function leagueSchedule() {
     }
     console.log(mega_log);
 
-    console.log(JSON.stringify(tmp))
+    let data = JSON.stringify(tmp);
+
+    console.log(data);
+    download('data.json', data);
 }
 function parseDayDivHTML(dayDiv) {
     let ret = [];
