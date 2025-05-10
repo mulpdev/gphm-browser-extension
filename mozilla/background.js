@@ -20,12 +20,19 @@ browser.contextMenus.create({
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
+        id: "gphm-smart-copy-season",
+        title: "GPHM Smart Copy Season",
+        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
+    },
+    () => void browser.runtime.lastError,
+);
+/*browser.contextMenus.create({
         id: "gphm-smart-copy-TESTER",
         title: "GPHM Smart Copy TESTER",
         contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
     },
     () => void browser.runtime.lastError,
-);
+);*/
 browser.contextMenus.onClicked.addListener((info, tab) => {
     var copyFunc = ''
 
@@ -38,8 +45,8 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     else if (info.menuItemId === "gphm-open-popup-db") {
         copyFunc = "copyOpenPopupDB";
     }
-    else if (info.menuItemId === "gphm-smart-copy-TESTER") {
-        copyFunc = "TESTER";
+    else if (info.menuItemId === "gphm-smart-copy-season") {
+        copyFunc = "walkLeagueSchedule";
     }
         // gphm-smart-copy.js defines function copyToClipboard.
         const code = copyFunc + "()";

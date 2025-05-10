@@ -613,13 +613,31 @@ function TESTER(text, html) {
         //event.stopImmediatePropagation(); // if event exists??
 
         console.log("TESTER RUNNING");
-        leagueSchedule();
-        //parseGameURL('https://gameplanhockey.com/game?gpid=332160-A')
         modified = "LOL TEST";
 
         // Overwrite the clipboard content.
         event.preventDefault();
         event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+    console.log("TESTER COMPLETE!");
+}
+
+function walkLeagueSchedule(text, html) {
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        //event.stopImmediatePropagation(); // if event exists??
+
+        console.log("TESTER RUNNING");
+        leagueSchedule();
+        //parseGameURL('https://gameplanhockey.com/game?gpid=332160-A')
+
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        //event.clipboardData.setData("text/plain",  modified);
     }
     document.addEventListener("copy", oncopy, true);
     // Requires the clipboardWrite permission, or a user gesture:
@@ -634,74 +652,19 @@ function leagueSchedule() {
     let contentDiv = document.getElementById('content');
 
     // Get all the Home/Away/Link 
-    let schedule = []
+    let seasonResults = [];
     for (let i = 7; i < 87; i++) {
-        dayIdSel = `div [id='day-${i}']`; 
-        dayDiv = contentDiv.querySelector(dayIdSel);
-        let games = parseDayDivHTML(dayDiv);
-        schedule.push(games);
-    }
-
-    // Find Balazs ratio winner
-    var max_ratio = -1;
-    var max_ratio_games = [];
-    var ratio_games = [];
-
-    for (let day = 0; day < schedule.length; day++) {
-        for (played of schedule[day]) {
-            let link = played.Link;
-            let results = parseGameURL(link);
-            let key = results.Loser;
-
-            if (link === 'https://gameplanhockey.com/game?gpid=332160-A') {
-                console.log('==================');
-            }
-            
-            if ((results.Home.BalazsRatio > -1) || (results.Away.BalazsRatio > -1)){
-                console.log("Day"+(day+7) + " " + link + "  /  " + results.Home.Name + " (" + results.Home.Result + ") " + homeBR + "  /  " + results.Away.Name + " (" + results.Away.Result + ") " + awayBR + " [" + results.Loser + " | " + results[key].BalazsRatio + "]");
-            }
-
-            let currRatio = results[key].BalazsRatio;
-            //console.log("Loser: " + results[key].Name + ", currRatio: " + results[key].BalazsRatio);
-
-            if (currRatio > max_ratio) {
-                console.log("UPDATE from: " + max_ratio + " to: " + results[key].BalazsRatio);
-                max_ratio_games = [];
-                max_ratio_games.push(results);
-                max_ratio = currRatio;
-            }
-            else if (currRatio === max_ratio) {
-                console.log("SAME ratio: " + results[key].BalazsRatio + " ... appending results");
-                max_ratio_games.push(results);
-            }
-            else {
-                
-                ;
-                //console.log("max_ratio: " + max_ratio + " > " + currRatio + " (" + (max_ratio > currRatio) + ")");
-            }
-            
-            if ((results.Home.BalazsRatio > -1) || (results.Away.BalazsRatio > -1)) {
-                ratio_games.push(results);
-            }
+        let dayIdSel = `div [id='day-${i}']`; 
+        let dayDiv = contentDiv.querySelector(dayIdSel);
+        let dayGames = parseDayDivHTML(dayDiv);
+        console.log("Day" + i.toString());
+        for (let j = 0; j < dayGames.length; j++) {
+            console.log(`Game ${j} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
+            let results = parseGameURL(dayGames[j].Link);
+            seasonResults.push(results);
         }
     }
-    console.log("--------------------------------");
-    console.log("Max Balazs Ratio: " + max_ratio);
-    console.log("Max Balazs Ratio Games: ");
-    for (tmp of max_ratio_games) {
-        let s = '';
-        let l = tmp.Loser;
-        console.log(tmp[l].Name + ' ' + tmp.HYPERLINK);
-    }
-   
-    mega_log = '';
-    for (tmp of ratio_games) {
-        mega_log += `${tmp.HYPERLINK}, ${tmp.Home.BalazsRatio}, ${tmp.Away.BalazsRatio}\n'`;
-    }
-    console.log(mega_log);
-
-    let data = JSON.stringify(tmp);
-
+    let data = JSON.stringify(seasonResults);
     console.log(data);
     download('data.json', data);
 }
@@ -757,50 +720,39 @@ function parseGameURL(url) {
 
         for (let j = 1; j < rows.length; j++) {
             let ha = TEAMS[j]
-            let shots = rows[j].querySelectorAll('td');
+            let shots_columns = rows[j].querySelectorAll('td');
 
-            sbp[ha]['Name'] = shots[0].querySelector('a').title;
+            sbp[ha]['Name'] = shots_columns[0].querySelector('a').title;
             sbp[ha][`${stat}`] = [];
-            sbp[ha][`${stat}`].push(parseInt(shots[1].textContent.trim()));
-            sbp[ha][`${stat}`].push(parseInt(shots[2].textContent.trim()));
-            sbp[ha][`${stat}`].push(parseInt(shots[3].textContent.trim()));
+            sbp[ha][`${stat}`].push(parseInt(shots_columns[1].textContent.trim()));
+            sbp[ha][`${stat}`].push(parseInt(shots_columns[2].textContent.trim()));
+            sbp[ha][`${stat}`].push(parseInt(shots_columns[3].textContent.trim()));
 
-            if (shots.length ===  5) {
-                sbp[ha][`${stat}`].push(parseInt(shots[4].textContent.trim()));
+            if (shots_columns.length ===  5) {
+                sbp[ha][`${stat}`].push(parseInt(shots_columns[4].textContent.trim()));
             }
-            else if (shots.length ===  6) {
-                sbp[ha][`${stat}`].push(parseInt(shots[4].textContent.trim()));
-                sbp[ha][`${stat}`].push(parseInt(shots[5].textContent.trim()));
+            else if (shots_columns.length ===  6) {
+                sbp[ha][`${stat}`].push(parseInt(shots_columns[4].textContent.trim()));
+                sbp[ha][`${stat}`].push(parseInt(shots_columns[5].textContent.trim()));
             }
-            else if (shots.length ===  7) {
-                sbp[ha][`${stat}`].push(parseInt(shots[4].textContent.trim()));
-                sbp[ha][`${stat}`].push(parseInt(shots[5].textContent.trim()));
-                sbp[ha][`${stat}`].push(parseInt(shots[6].textContent.trim()));
+            else if (shots_columns.length ===  7) {
+                sbp[ha][`${stat}`].push(parseInt(shots_columns[4].textContent.trim()));
+                sbp[ha][`${stat}`].push(parseInt(shots_columns[5].textContent.trim()));
+                sbp[ha][`${stat}`].push(parseInt(shots_columns[6].textContent.trim()));
             }
             else {
-                console.error("shots.length === " + shots.length);
+                console.error("shots.length === " + shots_columns.length);
             }
         }
     }
     sbp['HYPERLINK'] = url;
 
-    homeBR = calcBalazsRatio(sbp['Home'], sbp['Away']); 
-    sbp['Home']['BalazsRatio'] = homeBR;
-
-    awayBR = calcBalazsRatio(sbp['Away'], sbp['Home']);
-    sbp['Away']['BalazsRatio'] = awayBR;
-    
     sbp['Winner'] = 'Home';
     sbp['Loser'] = 'Away';
     if (sbp.Away.G.at(-1) > sbp.Home.G.at(-1)) {
         sbp['Winner'] = 'Away';
         sbp['Loser'] = 'Home';
     }
-    let ha = sbp.Winner;
-    sbp[ha]['Result'] = 'W';
-    ha = sbp.Loser;
-    sbp[ha]['Result'] = 'L';
     
-    //console.log(url + "  /  " + sbp.Home.Name + " (" + sbp.Home.Result + ") " + homeBR + "  /  " + sbp.Away.Name + " (" + sbp.Away.Result + ") " + awayBR);
     return sbp;
 }
