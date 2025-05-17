@@ -1,28 +1,33 @@
+const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
+const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
+const ID_COPY_POPUP_DB = "gphm-open-popup-db";
+const ID_WALK_SEASON = "gphm-smart-copy-league-season";
+
 browser.contextMenus.create({
-        id: "gphm-scouting-profile",
+        id: ID_COPY_SCOUTING_PROFILE,
         title: "GPHM Smart Copy Scouting Profile",
-        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType 
+        contexts: ["page"],
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
-        id: "gphm-open-popup-fadraft",
+        id: ID_COPY_POPUP_FA,
         title: "GPHM Smart Copy Open Popup - FA/Draft",
-        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
+        contexts: ["page"],
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
-        id: "gphm-open-popup-db",
+        id: ID_COPY_POPUP_DB,
         title: "GPHM Smart Copy Open Popup - DB",
-        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
+        contexts: ["page"],
     },
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
-        id: "gphm-smart-copy-season",
+        id: ID_WALK_SEASON,
         title: "GPHM Smart Copy Season",
-        contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
+        contexts: ["page"],
     },
     () => void browser.runtime.lastError,
 );
@@ -36,40 +41,41 @@ browser.contextMenus.create({
 browser.contextMenus.onClicked.addListener((info, tab) => {
     var copyFunc = ''
 
-    if (info.menuItemId === "gphm-scouting-profile") {
-        copyFunc = "copyScoutingProfile";
+    if (info.menuItemId === ID_COPY_SCOUTING_PROFILE) {
+        copyFunc = "copyToClipboardHandler";
     }
-    else if (info.menuItemId === "gphm-open-popup-fadraft") {
-        copyFunc = "copyOpenPopupFA";
+    else if (info.menuItemId === ID_COPY_POPUP_FA) {
+        copyFunc = "copyToClipboardHandler";
     }
-    else if (info.menuItemId === "gphm-open-popup-db") {
-        copyFunc = "copyOpenPopupDB";
+    else if (info.menuItemId === ID_COPY_POPUP_DB) {
+        copyFunc = "copyToClipboardHandler";
     }
-    else if (info.menuItemId === "gphm-smart-copy-season") {
-        copyFunc = "walkLeagueSchedule";
+    else if (info.menuItemId === ID_WALK_SEASON) {
+        copyFunc = "createJsonHandler";
     }
-        // gphm-smart-copy.js defines function copyToClipboard.
-        const code = copyFunc + "()";
-        browser.tabs.executeScript({
-            code: "typeof " + copyFunc + " === 'function';",
-        }).then((results) => {
-            // The content script's last expression will be true if the function
-            // has been defined. If this is not the case, then we need to run
-            // gphm-smart-copy.js to define function copyToClipboard.
-            if (!results || results[0] !== true) {
-                return browser.tabs.executeScript(tab.id, {
-                    file: "gphm-smart-copy.js",
-                });
-            }
-        }).then(() => {
+ 
+    // gphm-smart-copy.js defines function copyToClipboard.
+    const code = copyFunc + "('" + info.menuItemId + "')";
+    browser.tabs.executeScript({
+        code: "typeof " + copyFunc + " === 'function';",
+    }).then((results) => {
+        // The content script's last expression will be true if the function
+        // has been defined. If this is not the case, then we need to run
+        // gphm-smart-copy.js to define function copyToClipboard.
+        if (!results || results[0] !== true) {
             return browser.tabs.executeScript(tab.id, {
-                code,
+                file: "gphm-smart-copy.js",
             });
-        }).catch((error) => {
-            // This could happen if the extension is not allowed to run code in
-            // the page, for example if the tab is a privileged page.
-            console.error("Failed to copy text: " + error);
+        }
+    }).then(() => {
+        return browser.tabs.executeScript(tab.id, {
+            code,
         });
+    }).catch((error) => {
+        // This could happen if the extension is not allowed to run code in
+        // the page, for example if the tab is a privileged page.
+        console.error("Failed to copy text: " + error);
+    });
 });
 
 // https://gist.github.com/Rob--W/ec23b9d6db9e56b7e4563f1544e0d546

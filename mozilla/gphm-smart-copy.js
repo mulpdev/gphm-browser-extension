@@ -3,6 +3,13 @@ String.prototype.replaceAt = function(index, replacement) {
     return this.substring(0, index) + replacement + this.substring(index + replacement.length);
 }
 
+/*
+NOTE1: calls document.getElementsByClassName() so comma seperated string of each className
+
+NOTE2: calls queryselector*(), so dot seperated string of classNames 
+
+NOTE3: querySelector() only returns FIRST subelement, querySelectorAll() returns all
+*/
 
 const BIO = ['Link', 'Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand'];
 const RATINGS = ['Overall', 'Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'Physical', 'Spirit', 'Endurance', 'Faceoffs'];
@@ -65,6 +72,7 @@ const DB_FPO_ATTRIBS = [
     ALL_ATTRIBS_OBJ.Culture,
     ALL_ATTRIBS_OBJ.Winner 
 ];
+
 const FA_FPO_ATTRIBS = [
     ALL_ATTRIBS_OBJ.Link,
     ALL_ATTRIBS_OBJ.Name,
@@ -95,247 +103,212 @@ const FA_FPO_ATTRIBS = [
     ALL_ATTRIBS_OBJ.STATLINE,
 ];
 
-/*
-NOTE1: calls document.getElementsByClassName() so comma seperated string of each className
-
-NOTE2: calls queryselector*(), so dot seperated string of classNames 
-
-NOTE3: querySelector() only returns FIRST subelement, querySelectorAll() returns all
-*/
-
-// This function must be called in a visible page, such as a browserAction popup
-// or a content script. Calling it in a background page has no effect!
-function copySelection(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-        // Hide the event from the page to prevent tampering.
-        event.stopImmediatePropagation();
-
-        const selection = document.getSelection();
-        var copied = selection.toString()
-        lines = copied.split('\n');
-        var modified = strPopupAll(lines);
-
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-    }
-    document.addEventListener("copy", oncopy, true);
-
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-}
-
-function parseGphmMeter(dli) {
-    let em = dli.querySelector('em');
-    let sibling = em.nextSibling;
-    let progress = dli.querySelector('.progress')
-    let span = progress.querySelector('span')
-    
-    let key = em.textContent.trim();
-    key = key.replaceAll(' ', '_');
-    key = key.toLowerCase();
-    key = key.replaceAt(0, key[0].toUpperCase());
-    
-    let idx = key.indexOf("_");
-    if ( idx !== -1) {
-        key = key.replaceAt(idx+1, key[idx+1].toUpperCase());
-    }
-
-    let val = sibling.textContent.trim();
-    let color = pullGPHMColorFromClassName(progress);
-    let width = span.style.width.trim();
-
-   return {'Key':key, 'Value':val, 'Color':color, 'Width':width}; 
-}
-
-function copyScoutingProfile(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-        // Hide the event from the page to prevent tampering.
-        //event.stopImmediatePropagation(); // what is event??
-
-        let fakeScoutingProfileObj = {};
-
-        // get name
-        let notes = document.getElementsByClassName('panel scouting-report-container__notes');
-        let note = notes[0];
-        let paras = note.querySelectorAll('p');
-        let p = paras[1];
-        let t = p.textContent;
-        let spl = t.split(' is');
-        let name = spl[0];
-        
-        if (name.indexOf('brings') !== -1){
-            spl = name.split(' brings');
-            name = spl[0]
-        }
-        else if (name.indexOf('blends') !== -1){
-            spl = name.split(' blends');
-            name = spl[0]
-        }
-        fakeScoutingProfileObj['Name'] = name.trim();
-        
-        // get scouting data
-        let srcontainers = document.getElementsByClassName('scouting-report-container');
-        srcontainer = srcontainers[0];
-        
-        let cols = srcontainer.getElementsByClassName('column');
-        let left = cols[0];
-        let right = cols[1];
-
-        // left col
-        //let ldivs = left.querySelectorAll('div');
-        let lpanels = left.querySelectorAll('.panel');
-        
-        let personality_type = lpanels[0];
-        let pt_spans = personality_type.querySelectorAll('span');
-        fakeScoutingProfileObj['Dominant'] = pt_spans[0].title;
-        fakeScoutingProfileObj['Influenced'] = pt_spans[1].title;
-
-        let personality_spectrum = lpanels[1];
-        let dli_all = personality_spectrum.querySelectorAll('.data-list__item');
-        let ps_category = ['Competitor', 'Inspirer', 'Peacemaker', 'Tactician'];
-        for (i = 0; i < dli_all.length; i++)
-        {
-            let dli = dli_all[i];
-            let M = parseGphmMeter(dli);
-            fakeScoutingProfileObj[M.Key] = {};
-            fakeScoutingProfileObj[M.Key]['Value'] = M.Value;
-            fakeScoutingProfileObj[M.Key]['Color'] = M.Color;
-            fakeScoutingProfileObj[M.Key]['Width'] = M.Width;
-            
-        }
-        
-        let team_culture_panel = lpanels[2];
-        dli_all = team_culture_panel.querySelectorAll('li')
-        let tc_category = ['Culture_Influence', 'Culture_Impact', 'Teamwork_Impact', 'Winner_Instinct'];
-        let tc_subcat = ['Value', 'Progress', 'Width'];
-        let tc_keys = [];
-        for (i = 0; i < dli_all.length; i++) {
-            let dli = dli_all[i];
-            let M = parseGphmMeter(dli);
-            fakeScoutingProfileObj[M.Key] = {};
-            fakeScoutingProfileObj[M.Key]['Value'] = M.Value;
-            fakeScoutingProfileObj[M.Key]['Color'] = M.Color;
-            fakeScoutingProfileObj[M.Key]['Width'] = M.Width;
-        }
-        
-        // right col
-        let advice_lists_all = right.querySelectorAll('.advice-list');
-        let category = ['Likes', 'Dislikes']
-        fakeScoutingProfileObj['Likes'] = ['', '', '', '', '', '', ''];
-        fakeScoutingProfileObj['Dislikes'] = ['', '', '', '', '', '', ''];
-        
-        for (i = 0; i < advice_lists_all.length; i++)
-        {
-            let cat = category[i];
-            let liked = advice_lists_all[i];
-            let likedstr = ''
-            let li_all = liked.querySelectorAll('li')
-            for (j = 0; j < li_all.length; j++)
-            {
-                let li = li_all[j];
-                let name = li.textContent;
-                name = name.substring(0, name.length-4) // Remove position in parens
-                //modified += name + ", "
-                fakeScoutingProfileObj[cat][j] = name;
-            }
-        }
-        
-        // Make string
-        console.log(fakeScoutingProfileObj);
-        
-        let SEP = ', '
-        let modified = '';
-
-        modified += fakeScoutingProfileObj.Name + SEP;
-        modified += fakeScoutingProfileObj.Competitor.Value + SEP;
-        modified += fakeScoutingProfileObj.Inspirer.Value + SEP;
-        modified += fakeScoutingProfileObj.Peacemaker.Value + SEP;
-        modified += fakeScoutingProfileObj.Tactician.Value + SEP;
-
-        let TC = ['Culture_Influence', 'Culture_Impact', 'Teamwork_Impact', 'Winner_Instinct'];
-        for (let i = 0; i < TC.length; i++) {
-            let tmps = '';
-            tmps += fakeScoutingProfileObj[TC[i]].Value; 
-            //tmps += "|";
-            //tmps += fakeScoutingProfileObj[TC[i]].Color;
-            //tmps += "|";
-            //tmps += fakeScoutingProfileObj[TC[i]].Width;
-            modified += tmps + SEP
-        }
-        
-        for (let i = 0; i < fakeScoutingProfileObj.Likes.length; i++) {
-            modified += fakeScoutingProfileObj.Likes[i] + SEP;
-        }
-
-        for (let i = 0; i < fakeScoutingProfileObj.Dislikes.length; i++) {
-            modified += fakeScoutingProfileObj.Dislikes[i] + SEP;
-        }
-        
-
-        modified = modified.replaceAll(",", "\t");
-        console.log(modified);
-        
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-    }
-    document.addEventListener("copy", oncopy, true);
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-    console.log("COMPLETE!");
-}
+const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
+const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
+const ID_COPY_POPUP_DB = "gphm-open-popup-db";
+const ID_WALK_SEASON = "gphm-smart-copy-league-season";
 
 const OUTPUT_FORMAT = {
     "DB":0,
     "FA_DRAFT":1,
 }
-function copyOpenPopupDB(text, html) {
-    copyOpenPopup(text, html, OUTPUT_FORMAT.DB);
-}
-function copyOpenPopupFA(text, html) {
-    copyOpenPopup(text, html, OUTPUT_FORMAT.FA_DRAFT);
-}
-function copyOpenPopup(text, html, outputFormat) {
+
+/*
+Handler Functions
+*/
+function copyToClipboardHandler(menuItemId) {
+    // params used to be (text, html) but weren't actually used
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
-        //event.stopImmediatePropagation(); // if event exists??
-
-        fakePlayerObj = parseOpenPopupHtml();
-        if (fakePlayerObj === null) {
-            return;
-        }
-
-        let modified = null;
-        if (outputFormat === 0) {
-            modified = parseFakePlayerObjectToOutput(fakePlayerObj, DB_FPO_ATTRIBS, 'UNK?', '\t');
+        event.stopImmediatePropagation();
+        let modified = '';
+        
+        /* CODE HERE */
+        
+        if (menuItemId === ID_COPY_SCOUTING_PROFILE) {
+            modified = htmlParserScoutingProfile();
         }
         else {
-            modified = parseFakePlayerObjectToOutput(fakePlayerObj, FA_FPO_ATTRIBS, 'UNK?', '\t');
+            let popupClassName = "f-dropdown content player-dropdown open";
+            let fakePlayerObj = htmlParserPopup(popupClassName, 0);
+            if (fakePlayerObj === null) {
+                return;
+            }
+
+            if (menuItemId === ID_COPY_POPUP_FA) {
+                modified = formatFakePlayerObject(fakePlayerObj, FA_FPO_ATTRIBS, 'UNK?', '\t');
+            }
+            else if (menuItemId === ID_COPY_POPUP_DB) {
+                modified = formatFakePlayerObject(fakePlayerObj, DB_FPO_ATTRIBS, 'UNK?', '\t');
+            }
         }
+
+        /* END CODE HERE */
         
-        if (modified !== null) {
-            // Overwrite the clipboard content.
-            event.preventDefault();
-            event.clipboardData.setData("text/plain",  modified);
-            console.log("Clipboard Data: " + modified);
-        }
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+        console.log(modified);
     }
     document.addEventListener("copy", oncopy, true);
+
     // Requires the clipboardWrite permission, or a user gesture:
     document.execCommand("copy");
-    console.log("COMPLETE!");
 }
 
-function parseOpenPopupHtml() {
-    popupClassName = "f-dropdown content player-dropdown open";
-    return parsePopupHtml(popupClassName, 0);
+function createJsonHandler(menuItemId) {
+    console.log("in walkToJsonRoot()");
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        event.stopImmediatePropagation();
+        let modified = '';
+        /* CODE HERE */
+
+        if (menuItemId === ID_WALK_SEASON) {
+            console.log("in createJsonHandler");
+            modified = htmlParserLeagueSchedule();            
+        }
+
+        /* END CODE HERE */
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
 }
 
-function parsePopupHtml(popupClassName, popupClassIndex) {
+/*
+htmlParser Functions
+*/
+
+function htmlParserScoutingProfile() {
+    let fakeScoutingProfileObj = {};
+
+    // get name
+    let notes = document.getElementsByClassName('panel scouting-report-container__notes');
+    let note = notes[0];
+    let paras = note.querySelectorAll('p');
+    let p = paras[1];
+    let t = p.textContent;
+    let spl = t.split(' is');
+    let name = spl[0];
+    
+    if (name.indexOf('brings') !== -1){
+        spl = name.split(' brings');
+        name = spl[0]
+    }
+    else if (name.indexOf('blends') !== -1){
+        spl = name.split(' blends');
+        name = spl[0]
+    }
+    fakeScoutingProfileObj['Name'] = name.trim();
+    
+    // get scouting data
+    let srcontainers = document.getElementsByClassName('scouting-report-container');
+    srcontainer = srcontainers[0];
+    
+    let cols = srcontainer.getElementsByClassName('column');
+    let left = cols[0];
+    let right = cols[1];
+
+    // left col
+    //let ldivs = left.querySelectorAll('div');
+    let lpanels = left.querySelectorAll('.panel');
+    
+    let personality_type = lpanels[0];
+    let pt_spans = personality_type.querySelectorAll('span');
+    fakeScoutingProfileObj['Dominant'] = pt_spans[0].title;
+    fakeScoutingProfileObj['Influenced'] = pt_spans[1].title;
+
+    let personality_spectrum = lpanels[1];
+    let dli_all = personality_spectrum.querySelectorAll('.data-list__item');
+    let ps_category = ['Competitor', 'Inspirer', 'Peacemaker', 'Tactician'];
+    for (i = 0; i < dli_all.length; i++)
+    {
+        let dli = dli_all[i];
+        let M = htmlParserGphmMeter(dli);
+        fakeScoutingProfileObj[M.Key] = {};
+        fakeScoutingProfileObj[M.Key]['Value'] = M.Value;
+        fakeScoutingProfileObj[M.Key]['Color'] = M.Color;
+        fakeScoutingProfileObj[M.Key]['Width'] = M.Width;
+        
+    }
+    
+    let team_culture_panel = lpanels[2];
+    dli_all = team_culture_panel.querySelectorAll('li')
+    let tc_category = ['Culture_Influence', 'Culture_Impact', 'Teamwork_Impact', 'Winner_Instinct'];
+    let tc_subcat = ['Value', 'Progress', 'Width'];
+    let tc_keys = [];
+    for (i = 0; i < dli_all.length; i++) {
+        let dli = dli_all[i];
+        let M = htmlParserGphmMeter(dli);
+        fakeScoutingProfileObj[M.Key] = {};
+        fakeScoutingProfileObj[M.Key]['Value'] = M.Value;
+        fakeScoutingProfileObj[M.Key]['Color'] = M.Color;
+        fakeScoutingProfileObj[M.Key]['Width'] = M.Width;
+    }
+    
+    // right col
+    let advice_lists_all = right.querySelectorAll('.advice-list');
+    let category = ['Likes', 'Dislikes']
+    fakeScoutingProfileObj['Likes'] = ['', '', '', '', '', '', ''];
+    fakeScoutingProfileObj['Dislikes'] = ['', '', '', '', '', '', ''];
+    
+    for (i = 0; i < advice_lists_all.length; i++)
+    {
+        let cat = category[i];
+        let liked = advice_lists_all[i];
+        let likedstr = ''
+        let li_all = liked.querySelectorAll('li')
+        for (j = 0; j < li_all.length; j++)
+        {
+            let li = li_all[j];
+            let name = li.textContent;
+            name = name.substring(0, name.length-4) // Remove position in parens
+            //modified += name + ", "
+            fakeScoutingProfileObj[cat][j] = name;
+        }
+    }
+    
+    // Make string
+    let SEP = ', '
+    let modified = '';
+
+    modified += fakeScoutingProfileObj.Name + SEP;
+    modified += fakeScoutingProfileObj.Competitor.Value + SEP;
+    modified += fakeScoutingProfileObj.Inspirer.Value + SEP;
+    modified += fakeScoutingProfileObj.Peacemaker.Value + SEP;
+    modified += fakeScoutingProfileObj.Tactician.Value + SEP;
+
+    let TC = ['Culture_Influence', 'Culture_Impact', 'Teamwork_Impact', 'Winner_Instinct'];
+    for (let i = 0; i < TC.length; i++) {
+        let tmps = '';
+        tmps += fakeScoutingProfileObj[TC[i]].Value; 
+        //tmps += "|";
+        //tmps += fakeScoutingProfileObj[TC[i]].Color;
+        //tmps += "|";
+        //tmps += fakeScoutingProfileObj[TC[i]].Width;
+        modified += tmps + SEP
+    }
+    
+    for (let i = 0; i < fakeScoutingProfileObj.Likes.length; i++) {
+        modified += fakeScoutingProfileObj.Likes[i] + SEP;
+    }
+
+    for (let i = 0; i < fakeScoutingProfileObj.Dislikes.length; i++) {
+        modified += fakeScoutingProfileObj.Dislikes[i] + SEP;
+    }
+    
+    modified = modified.replaceAll(",", "\t");
+    return modified;
+}
+
+function htmlParserPopup(popupClassName, popupClassIndex) {
     elements = document.getElementsByClassName(popupClassName)
     popup = elements[popupClassIndex];
     if (popup === undefined) {
@@ -402,8 +375,12 @@ function parsePopupHtml(popupClassName, popupClassIndex) {
     /* Ratings and Traits which must be clicked open */
 
     // Click and update handle to popup on new Document DOM
-    popup = clickElementAndReturnNewDOM(popup, '.player-dropdown__toggler, .top-ratings', popupClassName, popupClassIndex); // Seperate ".Thing1.Thing2" with comma"
-    popup = clickElementAndReturnNewDOM(popup, '.player-dropdown__toggler, .all-traits', popupClassName, popupClassIndex); // Seperate ".Thing1.Thing2" with comma"
+
+    let clickme = popup.querySelector('.player-dropdown__toggler, .top-ratings');
+    popup = clickAndGetElement(clickme, [[popupClassName, popupClassIndex]]);
+
+    clickme = popup.querySelector('.player-dropdown__toggler, .all-traits');
+    popup = clickAndGetElement(clickme, [[popupClassName, popupClassIndex]]);
 
     // then get newly UNhidden all-ratings section
     ratingsList = popup.querySelector('.player-dropdown__ratings.rating-list.all-ratings'); // className starts with . and all spaced converted to .
@@ -464,190 +441,10 @@ function parsePopupHtml(popupClassName, popupClassIndex) {
     return fakePlayerObj;
 }
 
-/* HELPER funcs */
-function createFakePlayerObject() {
-    let fakePlayerObj = { };
-    
-    for (A of ATTRIBS) {
-        fakePlayerObj[A] = '\t';
-    }
-
-    return fakePlayerObj;
-}
-
-function parseFakePlayerObjectToOutput(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
-    ret = '';
-    for (A of attribs) {
-        val = DEFAULT_VAL;
-        if (A in fakePlayerObj){
-            let tmp = fakePlayerObj[A].toString();
-            if (tmp !== '\t') {
-                val = tmp;
-            }
-        }
-        ret += val;
-        ret += SEP;
-    }
-    return ret;
-}
-
-/*
-Click the button the reveal and return the new DOM
-  - Hidden display elements are not visible to querySelector()
-  - Results of previous querySelector() calls are snapshots in time, so we need to update DOM var
-  */
- function clickElementAndReturnNewDOM(currentDom, clickClassname, popupClassName, newDomIndex) {
-    clickme = currentDom.querySelector(clickClassname);
-    clickme.click();
-    
-    elements = document.getElementsByClassName(popupClassName);
-    return elements[newDomIndex];
- }
-
-function heightToMetric(feet, inches) {
-    CM_TO_INCH = 2.54;
-
-    iFeet = parseInt(feet);
-    iInches = parseInt(inches);
-    totalInches = iInches + (12 * iFeet);
-    totalInches += 1 // Account for GPHM off by one error when calculating height in inches
-    conversion = CM_TO_INCH * totalInches;
-    conversion = Math.round(conversion);
-    ret = conversion.toString() + " cm";
-    //ret = conversion;
-    //console.log(feet + "'" + inches + '"  =  ' + ret);
-    return ret;
-}
-
-function weightToMetric(lbs) {
-    G_TO_LBS = 453.592;
-
-    iLbs = parseInt(lbs);
-    conversion = G_TO_LBS * iLbs;
-    conversion = conversion/1000;
-    conversion = Math.round(conversion);
-    ret = conversion.toString() + " kg";
-    //ret = conversion;
-    //console.log(lbs + '  =  ' + ret);
-    return ret;
-}
-
-function pullGPHMColorFromClassName(ele) {
-    findme = ['success', 'ok', 'alert', 'warning'];
-    ret = 'ok';
-    cn_arr = ele.className.split(' ');
-    for (cn of cn_arr) {
-        if (findme.includes(cn)) { ret = cn; break; }
-    }
-    return ret;
-}
-
-// https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server
-function download(filename, text) {
-    var element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-    element.setAttribute('download', filename);
-  
-    element.style.display = 'none';
-    document.body.appendChild(element);
-  
-    element.click();
-  
-    document.body.removeChild(element);
-}
-
-/* ============================================================================================= */
- function clickElementAndReturnNewDOM2(clickEle, newEleClassName, newEleIndex) {
-    clickEle.click();
-    
-    elements = document.getElementsByClassName(newEleClassName);
-    ret = null;
-    if (elements.length > 1) {
-        ret = elements[newEleIndex];
-    }
-    else {
-        ret = elements;
-    }
-    return ret;
- }
- function getSourceAsDOM(url)
- {
-     xmlhttp=new XMLHttpRequest();
-     xmlhttp.open("GET",url,false);
-     xmlhttp.send();
-     parser=new DOMParser();
-     return parser.parseFromString(xmlhttp.responseText,"text/html");      
- }
-
-function calcBalazsRatio(selfTeam, oppTeam) {
-    let tmp = [];
-    if ((selfTeam.G.at(-1) < oppTeam.G.at(-1)) && (selfTeam.S.at(-1) > oppTeam.S.at(-1)) ) {
-
-        let ratio = ( (1 + oppTeam.G.at(-1)) / (1 + selfTeam.G.at(-1)) )
-        tmp.push(ratio);
-
-        for (let i = 0; i < selfTeam.S.length-1; i++) {
-            let selfS = selfTeam.S.at(i);
-            let selfO = oppTeam.S.at(i);
-            let term = 0.0
-            
-            if (selfO !== 0) {
-                term = selfS/selfO;
-            }
-            tmp.push(term);
-            ratio += term;
-
-        }
-        tmp.push(ratio);
-        return ratio//.toFixed(1);
-    }
-    else {
-        return -999;
-    }
-} 
-
-function TESTER(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-        // Hide the event from the page to prevent tampering.
-        //event.stopImmediatePropagation(); // if event exists??
-
-        console.log("TESTER RUNNING");
-        modified = "LOL TEST";
-
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-    }
-    document.addEventListener("copy", oncopy, true);
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-    console.log("TESTER COMPLETE!");
-}
-
-function walkLeagueSchedule(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-        // Hide the event from the page to prevent tampering.
-        //event.stopImmediatePropagation(); // if event exists??
-
-        console.log("TESTER RUNNING");
-        leagueSchedule();
-        //parseGameURL('https://gameplanhockey.com/game?gpid=332160-A')
-
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        //event.clipboardData.setData("text/plain",  modified);
-    }
-    document.addEventListener("copy", oncopy, true);
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-    console.log("TESTER COMPLETE!");
-}
-
-function leagueSchedule() {
+function htmlParserLeagueSchedule() {
+    console.log("in htmlParserLeagueSchedule");
     let element = document.getElementById("tabs-schedule");
-    clickElementAndReturnNewDOM2(element, "tabs-schedule", null)
+    clickAndGetElement(element, [["tabs-schedule", 0]])
 
     let contentDiv = document.getElementById('content');
 
@@ -656,39 +453,44 @@ function leagueSchedule() {
     for (let i = 7; i < 87; i++) {
         let dayIdSel = `div [id='day-${i}']`; 
         let dayDiv = contentDiv.querySelector(dayIdSel);
-        let dayGames = parseDayDivHTML(dayDiv);
+        let dayGames = htmlParserDayDiv(dayDiv);
         console.log("Day" + i.toString());
         for (let j = 0; j < dayGames.length; j++) {
             console.log(`Game ${j} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
-            let results = parseGameURL(dayGames[j].Link);
+            let results = htmlParserGameURL(dayGames[j].Link);
             seasonResults.push(results);
         }
     }
     let data = JSON.stringify(seasonResults);
     console.log(data);
-    download('data.json', data);
+    downloadJson('data.json', data);
 }
-function parseDayDivHTML(dayDiv) {
-    let ret = [];
 
-    let rows = dayDiv.querySelectorAll('tr');
-    for (row of rows) {
-        if (row.querySelectorAll('th').length > 0) {
-            continue;
-        }
-        let tmp = {};
-        let tds = row.querySelectorAll('td');
-        
-        tmp['Home'] = tds[0].querySelector('a').title;
-        tmp['Away'] = tds[1].querySelector('a').title;
-        tmp['Link'] = tds[3].querySelector('a').href;
-        ret.push(tmp)
+function htmlParserGphmMeter(dli) {
+    let em = dli.querySelector('em');
+    let sibling = em.nextSibling;
+    let progress = dli.querySelector('.progress')
+    let span = progress.querySelector('span')
+    
+    let key = em.textContent.trim();
+    key = key.replaceAll(' ', '_');
+    key = key.toLowerCase();
+    key = key.replaceAt(0, key[0].toUpperCase());
+    
+    let idx = key.indexOf("_");
+    if ( idx !== -1) {
+        key = key.replaceAt(idx+1, key[idx+1].toUpperCase());
     }
-    return ret;
+
+    let val = sibling.textContent.trim();
+    let color = pullGPHMColorFromClassName(progress);
+    let width = span.style.width.trim();
+
+   return {'Key':key, 'Value':val, 'Color':color, 'Width':width}; 
 }
 
-function parseGameURL(url) {
-    let dom = getSourceAsDOM(url);
+function htmlParserGameURL(url) {
+    let dom = UrlToDOM(url);
 
     let boxscoreDiv = dom.getElementById('boxscore');
 
@@ -755,4 +557,200 @@ function parseGameURL(url) {
     }
     
     return sbp;
+}
+
+function htmlParserDayDiv(dayDiv) {
+    let ret = [];
+
+    let rows = dayDiv.querySelectorAll('tr');
+    for (row of rows) {
+        if (row.querySelectorAll('th').length > 0) {
+            continue;
+        }
+        let tmp = {};
+        let tds = row.querySelectorAll('td');
+        
+        tmp['Home'] = tds[0].querySelector('a').title;
+        tmp['Away'] = tds[1].querySelector('a').title;
+        tmp['Link'] = tds[3].querySelector('a').href;
+        ret.push(tmp)
+    }
+    return ret;
+}
+
+/*
+Helper Functions
+*/
+function createFakePlayerObject() {
+    let fakePlayerObj = { };
+    
+    for (A of ATTRIBS) {
+        fakePlayerObj[A] = '\t';
+    }
+
+    return fakePlayerObj;
+}
+
+function formatFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
+    ret = '';
+    for (A of attribs) {
+        val = DEFAULT_VAL;
+        if (A in fakePlayerObj){
+            let tmp = fakePlayerObj[A].toString();
+            if (tmp !== '\t') {
+                val = tmp;
+            }
+        }
+        ret += val;
+        ret += SEP;
+    }
+    return ret;
+}
+
+function clickAndGetElement(clickEle, classname_and_idx) {
+    clickEle.click();
+
+    let ele = document;
+    for (const ci of classname_and_idx) {
+        let classname = ci[0];
+        let idx = ci[1];
+
+        let elements = ele.getElementsByClassName(classname);
+        ele = elements[idx];
+    }
+    return ele;
+}
+
+function UrlToDOM(url)
+{
+    xmlhttp=new XMLHttpRequest();
+    xmlhttp.open("GET",url,false);
+    xmlhttp.send();
+    parser=new DOMParser();
+    return parser.parseFromString(xmlhttp.responseText,"text/html");      
+}
+
+function downloadJson(filename, text) {
+// https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+  
+    element.style.display = 'none';
+    document.body.appendChild(element);
+  
+    element.click();
+  
+    document.body.removeChild(element);
+}
+
+function heightToMetric(feet, inches) {
+    CM_TO_INCH = 2.54;
+
+    iFeet = parseInt(feet);
+    iInches = parseInt(inches);
+    totalInches = iInches + (12 * iFeet);
+    totalInches += 1 // Account for GPHM off by one error when calculating height in inches
+    conversion = CM_TO_INCH * totalInches;
+    conversion = Math.round(conversion);
+    ret = conversion.toString() + " cm";
+    //ret = conversion;
+    //console.log(feet + "'" + inches + '"  =  ' + ret);
+    return ret;
+}
+
+function weightToMetric(lbs) {
+    G_TO_LBS = 453.592;
+
+    iLbs = parseInt(lbs);
+    conversion = G_TO_LBS * iLbs;
+    conversion = conversion/1000;
+    conversion = Math.round(conversion);
+    ret = conversion.toString() + " kg";
+    //ret = conversion;
+    //console.log(lbs + '  =  ' + ret);
+    return ret;
+}
+
+function pullGPHMColorFromClassName(ele) {
+    findme = ['success', 'ok', 'alert', 'warning'];
+    ret = 'ok';
+    cn_arr = ele.className.split(' ');
+    for (cn of cn_arr) {
+        if (findme.includes(cn)) { ret = cn; break; }
+    }
+    return ret;
+}
+
+/*
+BACKUP
+*/
+
+function testerHandler(text, html) {
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        //event.stopImmediatePropagation(); // if event exists??
+
+        console.log("TESTER RUNNING");
+        modified = "LOL TEST";
+
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+    console.log("TESTER COMPLETE!");
+}
+
+function calcBalazsRatio(selfTeam, oppTeam) {
+    let tmp = [];
+    if ((selfTeam.G.at(-1) < oppTeam.G.at(-1)) && (selfTeam.S.at(-1) > oppTeam.S.at(-1)) ) {
+
+        let ratio = ( (1 + oppTeam.G.at(-1)) / (1 + selfTeam.G.at(-1)) )
+        tmp.push(ratio);
+
+        for (let i = 0; i < selfTeam.S.length-1; i++) {
+            let selfS = selfTeam.S.at(i);
+            let selfO = oppTeam.S.at(i);
+            let term = 0.0
+            
+            if (selfO !== 0) {
+                term = selfS/selfO;
+            }
+            tmp.push(term);
+            ratio += term;
+
+        }
+        tmp.push(ratio);
+        return ratio//.toFixed(1);
+    }
+    else {
+        return -999;
+    }
+} 
+
+function copySelection(text, html) {
+// This function must be called in a visible page, such as a browserAction popup
+// or a content script. Calling it in a background page has no effect!
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        event.stopImmediatePropagation();
+
+        const selection = document.getSelection();
+        var copied = selection.toString()
+        lines = copied.split('\n');
+        var modified = strPopupAll(lines);
+
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
 }
