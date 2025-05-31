@@ -11,14 +11,19 @@ NOTE2: calls queryselector*(), so dot seperated string of classNames
 NOTE3: querySelector() only returns FIRST subelement, querySelectorAll() returns all
 */
 
-const BIO = ['Link', 'Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand'];
-const RATINGS = ['Overall', 'Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'Physical', 'Spirit', 'Endurance', 'Faceoffs'];
+const BIO = ['HYPERLINK', 'Name', 'Number', 'Nationality', 'Role', 'Team', 'Position', 'Age', 'Height', 'Weight', 'Hand', 'Overall'];
+// Overall in BIO
+const RATINGS = ['Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'Physical', 'Spirit', 'Endurance', 'Faceoffs'];
+const GOALIE_RATINGS = ['Reflexes', 'Positioning', 'PuckControl', 'PuckHandling', 'Athletic', 'Endurance', 'Spirit'];
 const TRAITS = ['Ego', 'Dirty', 'Leadership', 'BigGames', 'Ambition', 'Greed', 'Persona', 'Culture', 'Winner'];
 const PROFILE = ['Persona', 'Culture', 'Winner'];
-const SEASONSTATS = ['Reputation', 'Confidence', 'Health', 'League', 'GP', 'G', 'A', 'PTS', 'PIM', 'PER'];
+const SEASONSTATS = ['Reputation', 'Confidence', 'Health', 'League'];
+const SEASONSTATS_SKATER = ['GP', 'G', 'A', 'PTS', 'PIM', 'PER'];
+const SEASONSTATS_GOALIE = ['GP', 'GAA', 'SO', 'SV%', 'PER'];
 const TRADE = [ 'Status', 'TradeValue', 'Salary', 'Years', 'Clause', 'Happiness'];
-const CUSTOM = ['STATLINE', 'HYPERLINK'];
+const CUSTOM = ['STATLINE', 'SPREADSHEET_LINK'];
 const ATTRIBS = [].concat(BIO, RATINGS, TRAITS, SEASONSTATS, CUSTOM);
+const OUTPUT_DELIM_RATINGS_MARKER = 'QWERTY';
 
 let ALL_ATTRIBS_OBJ = {};
 for (A of ATTRIBS) {
@@ -26,8 +31,8 @@ for (A of ATTRIBS) {
 }
 
 const DB_FPO_ATTRIBS = [
-    //ALL_ATTRIBS_OBJ.Name,
-    ALL_ATTRIBS_OBJ.HYPERLINK,
+    ALL_ATTRIBS_OBJ.Name,
+    //ALL_ATTRIBS_OBJ.HYPERLINK,
     ALL_ATTRIBS_OBJ.Age,
     ALL_ATTRIBS_OBJ.Nationality,
     ALL_ATTRIBS_OBJ.Height,
@@ -74,23 +79,15 @@ const DB_FPO_ATTRIBS = [
 ];
 
 const FA_FPO_ATTRIBS = [
-    ALL_ATTRIBS_OBJ.Link,
     ALL_ATTRIBS_OBJ.Name,
+    ALL_ATTRIBS_OBJ.HYPERLINK,
     ALL_ATTRIBS_OBJ.Position,
     ALL_ATTRIBS_OBJ.Age,
     ALL_ATTRIBS_OBJ.Height,
     ALL_ATTRIBS_OBJ.Weight,
     ALL_ATTRIBS_OBJ.Hand,
     ALL_ATTRIBS_OBJ.Overall,
-    ALL_ATTRIBS_OBJ.Skating,
-    ALL_ATTRIBS_OBJ.Passing,
-    ALL_ATTRIBS_OBJ.PuckHandling,
-    ALL_ATTRIBS_OBJ.Shooting,
-    ALL_ATTRIBS_OBJ.Defence,
-    ALL_ATTRIBS_OBJ.Physical,
-    ALL_ATTRIBS_OBJ.Spirit,
-    ALL_ATTRIBS_OBJ.Endurance,
-    ALL_ATTRIBS_OBJ.Faceoffs,
+    OUTPUT_DELIM_RATINGS_MARKER,
     ALL_ATTRIBS_OBJ.Ego,
     ALL_ATTRIBS_OBJ.Dirty,
     ALL_ATTRIBS_OBJ.Leadership,
@@ -349,9 +346,6 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
     tmpH = spl[2].trim().toLowerCase();
 
     if (tmpH.includes("cm")) {
-        fakePlayerObj.Height = tmpH.trim();
-    }
-    else {
         splA = tmpH.split("'");
         feet = splA[0].trim();
 
@@ -360,14 +354,17 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
 
         fakePlayerObj.Height = heightToMetric(feet, inches);
     }
+    else {
+        fakePlayerObj.Height = tmpH.trim();
+    }
 
     tmpW = spl[3].trim().toLowerCase();
     if (tmpW.includes("kg")) {
-        fakePlayerObj.Weight = tmpW.trim();
-    }
-    else {
         splC = tmpW.split(' ');
         fakePlayerObj.Weight = weightToMetric(splC[0]);
+    }
+    else {
+        fakePlayerObj.Weight = tmpW.trim();
     }
    
     fakePlayerObj.Hand = spl[4].trim();
@@ -388,6 +385,8 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
     ratingDataItems = ratingsList.querySelectorAll('.rating-list__dataitem');
 
     for (let i = 0; i < ratingTitleItems.length; i++) {
+
+
         let rti = ratingTitleItems[i];
         rti_txt = rti.textContent.trim();
         
@@ -429,14 +428,21 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
         fakePlayerObj[k] = v;
     }
     
-    let statline = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
-    fakePlayerObj['STATLINE'] = statline;
+    if (fakePlayerObj.Position.toLowerCase() === 'goalie') {
+        let statline = fakePlayerObj.GAA + '/' + fakePlayerObj.SO + '/' + fakePlayerObj['SV%'] + ', ' + fakePlayerObj.League;
+        fakePlayerObj['STATLINE'] = statline;
+
+    }
+    else {
+        let statline = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
+        fakePlayerObj['STATLINE'] = statline;
+    }
 
     links = popup.querySelector('.player-dropdown__buttons');
     playerPageAnchor = links.getElementsByTagName('a')[0];
     anchorLink = playerPageAnchor.href;
-    fakePlayerObj.Link = anchorLink;
-    fakePlayerObj.HYPERLINK = `=HYPERLINK("${anchorLink}", "#${fakePlayerObj.Number} ${fakePlayerObj.Name}")`;
+    fakePlayerObj.HYPERLINK = anchorLink;
+    fakePlayerObj.SPREADSHEET_LINK = `=HYPERLINK("${anchorLink}", "#${fakePlayerObj.Number} ${fakePlayerObj.Name}")`;
 
     return fakePlayerObj;
 }
@@ -457,7 +463,9 @@ function htmlParserLeagueSchedule() {
         console.log("Day" + i.toString());
         for (let j = 0; j < dayGames.length; j++) {
             console.log(`Game ${j} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
-            let results = htmlParserGameURL(dayGames[j].Link);
+            let url = dayGames[j].Link;
+            let dom = UrlToDOM(url);
+            let results = htmlParserGamePage(dom, url);
             seasonResults.push(results);
         }
     }
@@ -489,9 +497,8 @@ function htmlParserGphmMeter(dli) {
    return {'Key':key, 'Value':val, 'Color':color, 'Width':width}; 
 }
 
-function htmlParserGameURL(url) {
-    let dom = UrlToDOM(url);
-
+function htmlParserGamePage(dom, url) {
+    console.log("in htmlParserGamePage");
     let boxscoreDiv = dom.getElementById('boxscore');
 
     let cols = boxscoreDiv.querySelectorAll('.column');
@@ -507,6 +514,28 @@ function htmlParserGameURL(url) {
     }
    
     // Right Col has 4 sections
+
+    // Three Stars
+    let tableEle = panels[0].querySelector('table');
+    let threeStarsData = [];
+
+    let tbody = tableEle.querySelector('tbody');
+    let rows = tbody.querySelectorAll('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        let row = rows[i];
+
+        console.log(row.children[0]);
+        let star = row.children[0].textContent.trim().match(/star/g).length;
+        let player_link = row.children[1].href//.querySelector('a').href;
+        let team_link = row.children[2].querySelector('a').href;
+        let points = row.children[3].textContent.trim();
+
+        threeStarsData.push([star, player_link, team_link, points]); 
+    }
+
+    console.log(threeStarsData);
+
 
     // Period Summary and Shots by Period
     periodSummary = panels[1].querySelector('.summary.period.table-display');
@@ -593,17 +622,51 @@ function createFakePlayerObject() {
 
 function formatFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
     ret = '';
+
+    var position_ratings = RATINGS;
+    let is_goalie = false;
+    if (fakePlayerObj.Position.toLowerCase() === 'goalie') {
+        position_ratings = GOALIE_RATINGS;
+        is_goalie = true;
+    }
+
+    let ratings_str = "";
+    for (R of position_ratings) {
+        val = DEFAULT_VAL;
+        if (R in fakePlayerObj) {
+            let tmp = fakePlayerObj[R].toString();
+            if (tmp !== SEP) {
+                val = tmp;
+            }
+        }
+        ratings_str += val;
+        ratings_str += SEP;
+    }
+
+    if (is_goalie) {
+        // Padding because goalies have less ratings
+        ratings_str += '-';
+        ratings_str += SEP;
+        ratings_str += '-';
+        ratings_str += SEP;
+    }
+    
     for (A of attribs) {
         val = DEFAULT_VAL;
-        if (A in fakePlayerObj){
+        if (A === OUTPUT_DELIM_RATINGS_MARKER) {
+           ret += ratings_str 
+           continue;
+        }
+        else if (A in fakePlayerObj) {
             let tmp = fakePlayerObj[A].toString();
-            if (tmp !== '\t') {
+            if (tmp !== SEP) {
                 val = tmp;
             }
         }
         ret += val;
         ret += SEP;
     }
+
     return ret;
 }
 
@@ -619,6 +682,20 @@ function clickAndGetElement(clickEle, classname_and_idx) {
         ele = elements[idx];
     }
     return ele;
+}
+
+function tableToArray(tableEle) {
+    return ret;
+}
+
+function trToArray(trEle) {
+    let ret = [];
+
+    for (let i = 0; i < trEle.children.length; i++) {
+        let child = trEle.children[i];
+        ret.push(child.textContent.trim());
+    }
+    return ret;
 }
 
 function UrlToDOM(url)
@@ -691,9 +768,15 @@ function testerHandler(text, html) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
         //event.stopImmediatePropagation(); // if event exists??
-
+        let modified = '';
+        
+        /* CODE HERE */
         console.log("TESTER RUNNING");
         modified = "LOL TEST";
+
+        modified = htmlParserGamePage(document, 'TEST');
+
+        /* END CODE HERE */
 
         // Overwrite the clipboard content.
         event.preventDefault();

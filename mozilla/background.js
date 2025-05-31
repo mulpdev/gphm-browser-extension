@@ -2,7 +2,7 @@ const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
 const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
 const ID_WALK_SEASON = "gphm-smart-copy-league-season";
-
+const ID_TESTER = "gphm-smart-copy-TESTER";
 browser.contextMenus.create({
         id: ID_COPY_SCOUTING_PROFILE,
         title: "GPHM Smart Copy Scouting Profile",
@@ -31,13 +31,13 @@ browser.contextMenus.create({
     },
     () => void browser.runtime.lastError,
 );
-/*browser.contextMenus.create({
-        id: "gphm-smart-copy-TESTER",
+browser.contextMenus.create({
+        id: ID_TESTER,
         title: "GPHM Smart Copy TESTER",
         contexts: ["page"], // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType
     },
     () => void browser.runtime.lastError,
-);*/
+);
 browser.contextMenus.onClicked.addListener((info, tab) => {
     var copyFunc = ''
 
@@ -52,6 +52,9 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     }
     else if (info.menuItemId === ID_WALK_SEASON) {
         copyFunc = "createJsonHandler";
+    }
+    else if (info.menuItemId === ID_TESTER) {
+        copyFunc = "testerHandler";
     }
  
     // gphm-smart-copy.js defines function copyToClipboard.
