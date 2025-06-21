@@ -190,18 +190,26 @@ function htmlParserScoutingProfile() {
     let notes = document.getElementsByClassName('panel scouting-report-container__notes');
     let note = notes[0];
     let paras = note.querySelectorAll('p');
-    let p = paras[1];
+    let p = paras[0];
+    let tmpdate = p.textContent;
+    tmpdate = tmpdate.split('Created ');
+    console.log(tmpdate);
+    //tmpdate = tmpdate.split(' ');
+    //tmpdate = tmpdate.slice(1);
+    fakeScoutingProfileObj['Date'] = tmpdate.join(' ');
+    
+    p = paras[1];
     let t = p.textContent;
     let spl = t.split(' is');
     let name = spl[0];
     
-    if (name.indexOf('brings') !== -1){
-        spl = name.split(' brings');
-        name = spl[0]
-    }
-    else if (name.indexOf('blends') !== -1){
-        spl = name.split(' blends');
-        name = spl[0]
+    let words = ['brings', 'blends', 'tries', 'leads']
+    for (let word of words) {
+        if (name.indexOf(word) !== -1){
+            spl = name.split(' ' + word);
+            name = spl[0]
+            break;
+        }
     }
     fakeScoutingProfileObj['Name'] = name.trim();
     
@@ -273,10 +281,23 @@ function htmlParserScoutingProfile() {
     }
     
     // Make string
-    let SEP = ', '
+    let SEP = '@ '
     let modified = '';
-
+    modified += fakeScoutingProfileObj.Date + SEP;
     modified += fakeScoutingProfileObj.Name + SEP;
+
+    // Teammate Likes/Dislikes
+    for (let i = 0; i < fakeScoutingProfileObj.Likes.length; i++) {
+        modified += fakeScoutingProfileObj.Likes[i] + SEP;
+    }
+
+    for (let i = 0; i < fakeScoutingProfileObj.Dislikes.length; i++) {
+        modified += fakeScoutingProfileObj.Dislikes[i] + SEP;
+    }
+    
+    // Player Specific
+    modified += fakeScoutingProfileObj.Dominant + SEP;
+    modified += fakeScoutingProfileObj.Influenced + SEP;
     modified += fakeScoutingProfileObj.Competitor.Value + SEP;
     modified += fakeScoutingProfileObj.Inspirer.Value + SEP;
     modified += fakeScoutingProfileObj.Peacemaker.Value + SEP;
@@ -292,16 +313,9 @@ function htmlParserScoutingProfile() {
         //tmps += fakeScoutingProfileObj[TC[i]].Width;
         modified += tmps + SEP
     }
-    
-    for (let i = 0; i < fakeScoutingProfileObj.Likes.length; i++) {
-        modified += fakeScoutingProfileObj.Likes[i] + SEP;
-    }
 
-    for (let i = 0; i < fakeScoutingProfileObj.Dislikes.length; i++) {
-        modified += fakeScoutingProfileObj.Dislikes[i] + SEP;
-    }
-    
-    modified = modified.replaceAll(",", "\t");
+    console.log(modified);
+    modified = modified.replaceAll(SEP, "\t");
     return modified;
 }
 
