@@ -59,7 +59,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
         copyFunc = "copyToClipboardHandler";
     }
     else if (info.menuItemId === ID_WALK_SEASON) {
-        copyFunc = "createJsonHandler";
+        copyFunc = "walkSeasonGamesHandler";
     }
     else if (info.menuItemId === ID_ASSISTANT_REPORT) {
         copyFunc = "assistantReportHandler";

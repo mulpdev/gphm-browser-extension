@@ -24,6 +24,7 @@ const TRADE = [ 'Status', 'TradeValue', 'Salary', 'Years', 'Clause', 'Happiness'
 const CUSTOM = ['STATLINE', 'SPREADSHEET_LINK'];
 const ATTRIBS = [].concat(BIO, RATINGS, TRAITS, SEASONSTATS, CUSTOM);
 const OUTPUT_DELIM_RATINGS_MARKER = 'QWERTY';
+const GAMESTATPLAYERSTAT_ORDERED = ['Player', 'G', 'A', 'PTS', "'+/-", 'PIM', 'S', 'HT', 'BKS', 'GVA', 'TKA', 'FO%', 'PP TOI', 'SH TOI', 'TOI', 'PER'];
 
 let ALL_ATTRIBS_OBJ = {};
 for (A of ATTRIBS) {
@@ -110,9 +111,9 @@ const OUTPUT_FORMAT = {
     "FA_DRAFT":1,
 }
 
-/*
+/********************************************************
 Handler Functions
-*/
+********************************************************/
 function copyToClipboardHandler(menuItemId) {
     // params used to be (text, html) but weren't actually used
     function oncopy(event) {
@@ -163,7 +164,8 @@ function assistantReportHandler(menuItemId) {
         let modified = '';
         /* CODE HERE */
 
-        modified = htmlParserAssistantReport();            
+        modified = AssistantReportToString();            
+        console.log(modified);
 
         /* END CODE HERE */
         // Overwrite the clipboard content.
@@ -177,7 +179,7 @@ function assistantReportHandler(menuItemId) {
     
 }
 
-function createJsonHandler(menuItemId) {
+function walkSeasonGamesHandler(menuItemId) {
     console.log("in walkToJsonRoot()");
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
@@ -202,9 +204,57 @@ function createJsonHandler(menuItemId) {
     document.execCommand("copy");
 }
 
-/*
+/********************************************************
+ToString Functions
+********************************************************/
+
+function AssistantReportToString() {
+    console.log("in htmlParserAssistantReport");
+
+    // TODO detect if it's unavailable
+
+    let action_button = document.getElementById("show-tacticReport");
+    
+    /*
+    clickAndGetElement(action_button, [["tabs-schedule", 0]])
+    let TeamOverview = htmlParserAssistantTeamOverview();
+    
+    let report_selection = document.getElementById("gameanalysis-playerselect");
+    clickDropdownByOptionValue(report_selection, "gameanalysis-chemistrycontainer")
+    let Chemistry = htmlParserAssistantChemistry();
+    */
+
+    let GameStats = htmlParserGamePageStats();
+
+    let stats_rows = []
+    let tmp = '';
+    const SEP = '\t'
+    for (let i = 0; i < GAMESTATPLAYERSTAT_ORDERED.length; i++) {
+        tmp += GAMESTATPLAYERSTAT_ORDERED[i] + SEP;
+    }
+    stats_rows.push(tmp);
+    for (let gs of GameStats) {
+        tmp = '';
+        for (let i = 0; i < GAMESTATPLAYERSTAT_ORDERED.length; i++) {
+            let key = GAMESTATPLAYERSTAT_ORDERED[i];                
+            tmp += gs[key] + SEP;
+        }
+        stats_rows.push(tmp);
+    }
+
+    // Carefully balance rows for spreadsheet mixed data
+    let ret = '';
+
+    for (let i = 0; i < stats_rows.length; i++) {
+        ret += stats_rows[i] + '\n';
+    }
+
+    return ret;
+}
+
+/********************************************************
 htmlParser Functions
-*/
+********************************************************/
 
 function htmlParserScoutingProfile() {
     let fakeScoutingProfileObj = {};
@@ -484,23 +534,6 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
     return fakePlayerObj;
 }
 
-function htmlParserAssistantReport() {
-    console.log("in htmlParserAssistantReport");
-
-    let action_button = document.getElementById("show-tacticReport");
-    clickAndGetElement(action_button, [["tabs-schedule", 0]])
-   
-    let TeamOverview = htmlParserAssistantTeamOverview();
-    
-    //document.getElementById('personlist').value=Person_ID;
-    let report_selection = document.getElementById("gameanalysis-playerselect");
-    clickDropdownByOptionValue(report_selection, "gameanalysis-chemistrycontainer")
-    
-    let Chemistry = htmlParserAssistantChemistry();
-
-
-}
-
 function htmlParserAssistantChemistry() {
     let tacticReport = document.getElementById("gameanalysis-chemistrycontainer");
     cols = tacticReport.querySelectorAll('.column, .medium-6');
@@ -528,20 +561,7 @@ function htmlParserAssistantChemistry() {
             let li = lis[j];
             let em = li.querySelector('em');
             
-            // Because textContent processes child nodes...
-            litext = null;
-            console.log(li);
-            for (const child of li.childNodes) {
-                if (child.nodeType == Node.TEXT_NODE) {
-                    console.log(child.textContent.trim())
-
-                    if (child.textContent.trim() === "") {
-                        continue;
-                    }
-                    litext = child.textContent.trim();
-                    break;
-                }
-            } 
+            litext = extractOnlyElementText(li);
             let k = h3text + "_" + em.textContent.trim(); 
             k = k.replaceAll(" ", "_");
             Chemistry[k] = litext.trim();
@@ -604,15 +624,7 @@ function htmlParserAssistantTeamOverview() {
             li = lis[j];
             let em = li.querySelector('em');
        
-            // Because textContent processes child nodes...
-            litext = null;
-            for (const child of li.childNodes) {
-                if (child.nodeType == Node.TEXT_NODE) {
-                    litext = child.textContent;
-                    break;
-                }
-            } 
-        
+            litext = extractOnlyElementText(li);
             TeamOverview[em.textContent.trim()] = litext.trim()
         }
     }
@@ -638,7 +650,7 @@ function htmlParserLeagueSchedule() {
             console.log(`Game ${j} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
             let url = dayGames[j].Link;
             let dom = UrlToDOM(url);
-            let results = htmlParserGamePage(dom, url);
+            let results = htmlParserGamePageBoxScore(dom, url);
             seasonResults.push(results);
         }
     }
@@ -670,8 +682,48 @@ function htmlParserGphmMeter(dli) {
    return {'Key':key, 'Value':val, 'Color':color, 'Width':width}; 
 }
 
-function htmlParserGamePage(dom, url) {
-    console.log("in htmlParserGamePage");
+function htmlParserGamePageStats() {
+    const TEAMNAME = "Mount Ayr Jordans"
+    let statsDiv = document.getElementById('stats');
+    let teams = statsDiv.querySelectorAll('.panel')
+    let found = false;
+
+    let ret = [];
+    for (let team of teams) {
+        let h2 = team.querySelector('h2');
+        if (h2.textContent.trim() !== TEAMNAME) {
+            continue;
+        }
+        found = true;
+
+        let table = team.querySelector('table');
+        let tbody = table.querySelector('tbody');
+        let rows = tbody.querySelectorAll('tr');
+        for (let row of rows) {
+            let tds = row.querySelectorAll('td');
+            playerstats = createGameStatsPlayerObject();
+
+            let key = GAMESTATPLAYERSTAT_ORDERED[0];
+            let valele = tds[0].querySelector('a');
+            let val = extractOnlyElementText(valele);
+            val = val.trim();
+            playerstats[key] = val;
+            
+            for (let i = 1; i < GAMESTATPLAYERSTAT_ORDERED.length; i++) {
+                let key = GAMESTATPLAYERSTAT_ORDERED[i];
+                playerstats[key] = tds[i].textContent.trim();
+            }
+            ret.push(playerstats);
+        }
+    }
+    if (found === false) {
+        console.log("Did not find stats for: " + TEAMNAME);
+    }
+    return ret;
+}
+
+function htmlParserGamePageBoxScore(dom, url) {
+    console.log("in htmlParserGamePageBoxScore");
     let boxscoreDiv = dom.getElementById('boxscore');
 
     let cols = boxscoreDiv.querySelectorAll('.column');
@@ -780,9 +832,10 @@ function htmlParserDayDiv(dayDiv) {
     return ret;
 }
 
-/*
+/********************************************************
 Helper Functions
-*/
+********************************************************/
+
 function createFakePlayerObject() {
     let fakePlayerObj = { };
     
@@ -843,6 +896,14 @@ function formatFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
     return ret;
 }
 
+function createGameStatsPlayerObject() {
+    let gspObj = {};
+    for (STAT of GAMESTATPLAYERSTAT_ORDERED) {
+        gspObj[STAT] = '\t';
+    }
+    return gspObj;
+}
+
 function clickDropdownByOptionIndex(dropdown, optionidx) {
     dropdown.selectedIndex = optionidx;
     const event = new Event('change');
@@ -869,6 +930,19 @@ function clickAndGetElement(clickEle, classname_and_idx) {
     return ele;
 }
 
+function extractOnlyElementText(ele) {
+    // Because textContent processes all printable child nodes...
+    eletext = null;
+    for (const child of ele.childNodes) {
+        //console.log(child.textContent.trim())
+        if (child.nodeType == Node.TEXT_NODE) {
+            //console.log(child.textContent.trim())
+            eletext = child.textContent;
+            break;
+        }
+    } 
+    return eletext;
+}
 function tableToArray(tableEle) {
     return ret;
 }
@@ -959,7 +1033,7 @@ function testerHandler(text, html) {
         console.log("TESTER RUNNING");
         modified = "LOL TEST";
 
-        modified = htmlParserGamePage(document, 'TEST');
+        modified = htmlParserGamePageBoxScore(document, 'TEST');
 
         /* END CODE HERE */
 
