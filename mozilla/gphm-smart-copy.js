@@ -154,6 +154,29 @@ function copyToClipboardHandler(menuItemId) {
     document.execCommand("copy");
 }
 
+function assistantReportHandler(menuItemId) {
+    console.log("in assistantReportHandler()");
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        event.stopImmediatePropagation();
+        let modified = '';
+        /* CODE HERE */
+
+        modified = htmlParserAssistantReport();            
+
+        /* END CODE HERE */
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+    
+}
+
 function createJsonHandler(menuItemId) {
     console.log("in walkToJsonRoot()");
     function oncopy(event) {
@@ -461,10 +484,146 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
     return fakePlayerObj;
 }
 
+function htmlParserAssistantReport() {
+    console.log("in htmlParserAssistantReport");
+
+    let action_button = document.getElementById("show-tacticReport");
+    clickAndGetElement(action_button, [["tabs-schedule", 0]])
+   
+    let TeamOverview = htmlParserAssistantTeamOverview();
+    
+    //document.getElementById('personlist').value=Person_ID;
+    let report_selection = document.getElementById("gameanalysis-playerselect");
+    clickDropdownByOptionValue(report_selection, "gameanalysis-chemistrycontainer")
+    
+    let Chemistry = htmlParserAssistantChemistry();
+
+
+}
+
+function htmlParserAssistantChemistry() {
+    let tacticReport = document.getElementById("gameanalysis-chemistrycontainer");
+    cols = tacticReport.querySelectorAll('.column, .medium-6');
+    let left_col = cols[0];
+    let right_col = cols[1];
+    left_panels = left_col.querySelectorAll(".panel");
+
+    let Chemistry = {}
+
+    for (let i = 0; i < left_panels.length; i++) {
+        let panel = left_panels[i];
+        let h3 = panel.querySelector('h3');
+        let h3text = h3.textContent.trim()
+        let lis = panel.querySelectorAll('li');
+        for (let j = 0; j < lis.length-3; j++) {
+            let li = lis[j];
+            let em = li.querySelector('em');
+            let a = li.querySelector('a');
+
+            let k = h3text + "_" + em.textContent.trim();
+            k = k.replaceAll(" ", "_");
+            Chemistry[k] = a.textContent.trim();
+        }
+        for (let j = lis.length-3; j < lis.length-1; j++) {
+            let li = lis[j];
+            let em = li.querySelector('em');
+            
+            // Because textContent processes child nodes...
+            litext = null;
+            console.log(li);
+            for (const child of li.childNodes) {
+                if (child.nodeType == Node.TEXT_NODE) {
+                    console.log(child.textContent.trim())
+
+                    if (child.textContent.trim() === "") {
+                        continue;
+                    }
+                    litext = child.textContent.trim();
+                    break;
+                }
+            } 
+            let k = h3text + "_" + em.textContent.trim(); 
+            k = k.replaceAll(" ", "_");
+            Chemistry[k] = litext.trim();
+        }
+        
+        let li = lis[lis.length-1];
+        let em = li.querySelector('em');
+        let span = li.querySelector('span');
+        Chemistry[em.textContent.trim()] = span.textContent.trim();
+    }
+
+    console.log(Chemistry);
+    return Chemistry;
+}
+
+function htmlParserAssistantTeamOverview() {
+    // actually the whole modal for assistant reports despite name
+    let tacticReport = document.getElementById("tacticReport");
+
+    cols = tacticReport.querySelectorAll('.column, .medium-6');
+    let left_col = cols[0];
+    let right_col = cols[1];
+    left_panels = left_col.querySelectorAll(".panel");
+    
+    
+    let TeamOverview = {};
+    let h3 = left_panels[0].querySelector('h3');
+    let em = left_panels[0].querySelector('em');
+    TeamOverview[h3.textContent.trim()] = em.textContent.trim()
+    
+    let positive_remarks = left_panels[1].querySelectorAll('li');
+    for (let i = 0; i < positive_remarks.length; i++) {
+        let li = positive_remarks[i];
+        let k = 'postive_' + i.toString();
+        TeamOverview[k] = li.textContent.trim()
+    }
+   
+    let negative_remarks = left_panels[2].querySelectorAll('li');
+    for (let i = 0; i < negative_remarks.length; i++) {
+        let li = negative_remarks[i];
+        let k = 'negative_' + i.toString();
+        TeamOverview[k] = li.textContent.trim()
+    }
+
+    right_panels = right_col.querySelectorAll(".panel");
+    let epanel = right_panels[0];
+    let elis = epanel.querySelectorAll('li')
+    for (let j = 1; j < elis.length; j++) {
+        eli = elis[j]
+        let eem = eli.querySelector('em');
+        let espan = eli.querySelector('span');
+        TeamOverview[eem.textContent.trim()] = espan.textContent.trim();
+    }
+
+
+    for (let i = 1; i < right_panels.length; i++) {
+        let panel = right_panels[i];
+        let lis = panel.querySelectorAll('li');
+        for (let j = 1; j < lis.length; j++) {
+            li = lis[j];
+            let em = li.querySelector('em');
+       
+            // Because textContent processes child nodes...
+            litext = null;
+            for (const child of li.childNodes) {
+                if (child.nodeType == Node.TEXT_NODE) {
+                    litext = child.textContent;
+                    break;
+                }
+            } 
+        
+            TeamOverview[em.textContent.trim()] = litext.trim()
+        }
+    }
+    //console.log(TeamOverview)
+    return TeamOverview;
+}
+
 function htmlParserLeagueSchedule() {
     console.log("in htmlParserLeagueSchedule");
     let element = document.getElementById("tabs-schedule");
-    clickAndGetElement(element, [["tabs-schedule", 0]])
+    clickAndGetElement(element, [["tabs-schedule", 0]]) // ignore return
 
     let contentDiv = document.getElementById('content');
 
@@ -684,6 +843,18 @@ function formatFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
     return ret;
 }
 
+function clickDropdownByOptionIndex(dropdown, optionidx) {
+    dropdown.selectedIndex = optionidx;
+    const event = new Event('change');
+    dropdown.dispatchEvent(event);
+}
+
+function clickDropdownByOptionValue(dropdown, optionvalue) {
+    dropdown.value = optionvalue;
+    const event = new Event('change');
+    dropdown.dispatchEvent(event);
+}
+
 function clickAndGetElement(clickEle, classname_and_idx) {
     clickEle.click();
 
@@ -773,9 +944,9 @@ function pullGPHMColorFromClassName(ele) {
     return ret;
 }
 
-/*
+/***************************************
 BACKUP
-*/
+****************************************/
 
 function testerHandler(text, html) {
     function oncopy(event) {
