@@ -80,8 +80,8 @@ const DB_FPO_ATTRIBS = [
 ];
 
 const FA_FPO_ATTRIBS = [
-    ALL_ATTRIBS_OBJ.Name,
     ALL_ATTRIBS_OBJ.HYPERLINK,
+    ALL_ATTRIBS_OBJ.Name,
     ALL_ATTRIBS_OBJ.Position,
     ALL_ATTRIBS_OBJ.Age,
     ALL_ATTRIBS_OBJ.Height,
@@ -407,11 +407,16 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
     fakePlayerObj.Name = tmp.textContent;
     fakePlayerObj.Name += ' ';
 
+    console.log(elements);
+    console.log(popup);
+    console.log(tmp)
     tmp = popup.querySelector('.heading-two-piece__sur');
+    console.log(tmp)
     fakePlayerObj.Name += tmp.textContent;
 
     tmp = popup.querySelector('.team-jersey__playernumber');
-    fakePlayerObj.Number = tmp.textContent;
+    if (tmp !== null) { fakePlayerObj.Number = tmp.textContent; }
+    else { fakePlayerObj.Number = 'FA'; }
 
     tmp = popup.querySelector('.nationality-string');
     fakePlayerObj.Nationality = tmp.textContent;
@@ -500,29 +505,43 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
 
     /* Season and link */
     seasonHeading = popup.querySelector('.player-dropdown__seasoninfo');
-    h3 = seasonHeading.getElementsByTagName('h3')
-    h3 = h3[0];
-    spl = h3.textContent.trim().split(',');
-    fakePlayerObj.League = spl[0];
+    if (seasonHeading !== null)
+    {
+        h3 = seasonHeading.getElementsByTagName('h3')
+        h3 = h3[0];
+        spl = h3.textContent.trim().split(',');
+        fakePlayerObj.League = spl[0];
 
-    stats = popup.querySelector('.summary.table-display');
-    tdList = stats.getElementsByTagName('td');
-    thList = stats.getElementsByTagName('th');
+        stats = popup.querySelector('.summary.table-display');
+        tdList = stats.getElementsByTagName('td');
+        thList = stats.getElementsByTagName('th');
 
-    for (let i = 0; i < tdList.length; i++) {
-        let k = thList[i].textContent.trim();
-        let v = tdList[i].textContent.trim();
-        fakePlayerObj[k] = v;
-    }
-    
-    if (fakePlayerObj.Position.toLowerCase() === 'goalie') {
-        let statline = fakePlayerObj.GAA + '/' + fakePlayerObj.SO + '/' + fakePlayerObj['SV%'] + ', ' + fakePlayerObj.League;
-        fakePlayerObj['STATLINE'] = statline;
+        for (let i = 0; i < tdList.length; i++) {
+            let k = thList[i].textContent.trim();
+            let v = tdList[i].textContent.trim();
+            fakePlayerObj[k] = v;
+        }
+        
+        if (fakePlayerObj.Position.toLowerCase() === 'goalie') {
+            let statline = fakePlayerObj.GAA + '/' + fakePlayerObj.SO + '/' + fakePlayerObj['SV%'] + ', ' + fakePlayerObj.League;
+            fakePlayerObj['STATLINE'] = statline;
 
+        }
+        else {
+            let statline = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
+            fakePlayerObj['STATLINE'] = statline;
+        }
     }
     else {
-        let statline = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
-        fakePlayerObj['STATLINE'] = statline;
+        if (fakePlayerObj.Position.toLowerCase() === 'goalie') {
+            let statline = '0/0/0/FA';
+            fakePlayerObj['STATLINE'] = statline;
+
+        }
+        else {
+            let statline = '0/0/0/0/FA';
+            fakePlayerObj['STATLINE'] = statline;
+        }
     }
 
     links = popup.querySelector('.player-dropdown__buttons');
