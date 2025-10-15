@@ -334,8 +334,9 @@ function htmlParserScoutingProfile() {
     // right col
     let advice_lists_all = right.querySelectorAll('.advice-list');
     let category = ['Likes', 'Dislikes']
-    fakeScoutingProfileObj['Likes'] = ['', '', '', '', '', '', ''];
-    fakeScoutingProfileObj['Dislikes'] = ['', '', '', '', '', '', ''];
+		let default_val = '-'
+    fakeScoutingProfileObj['Likes'] = [default_val, default_val, default_val, default_val, default_val, default_val, default_val];
+    fakeScoutingProfileObj['Dislikes'] = [default_val, default_val, default_val, default_val, default_val, default_val, default_val];
     
     for (i = 0; i < advice_lists_all.length; i++)
     {
