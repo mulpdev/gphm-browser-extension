@@ -276,7 +276,7 @@ function htmlParserScoutingProfile() {
     let spl = t.split(' is');
     let name = spl[0];
     
-    let words = ['brings', 'blends', 'tries', 'leads']
+    let words = ['brings', 'blends', 'tries', 'leads', 'prioritizes']
     for (let word of words) {
         if (name.indexOf(word) !== -1){
             spl = name.split(' ' + word);
