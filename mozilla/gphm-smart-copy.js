@@ -3,6 +3,7 @@ String.prototype.replaceAt = function(index, replacement) {
     return this.substring(0, index) + replacement + this.substring(index + replacement.length);
 }
 
+import { clickAndGetElement, clickDropdownByOptionIndex, clickDropdownByOptionValue, downloadJson, extractOnlyElementText, pullGPHMColorFromClassName, tableToArray, trToArray, UrlToDOM, heightToMetric, weightToMetric} from './helper.js';
 /*
 NOTE1: calls document.getElementsByClassName() so comma seperated string of each className
 
