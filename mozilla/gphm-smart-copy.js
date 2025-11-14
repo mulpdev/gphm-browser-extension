@@ -3,7 +3,7 @@ String.prototype.replaceAt = function(index, replacement) {
     return this.substring(0, index) + replacement + this.substring(index + replacement.length);
 }
 
-import { clickAndGetElement, clickDropdownByOptionIndex, clickDropdownByOptionValue, downloadJson, extractOnlyElementText, pullGPHMColorFromClassName, tableToArray, trToArray, UrlToDOM, heightToMetric, weightToMetric} from './helper.js';
+//import { clickAndGetElement, clickDropdownByOptionIndex, clickDropdownByOptionValue, downloadJson, extractOnlyElementText, pullGPHMColorFromClassName, tableToArray, trToArray, UrlToDOM, heightToMetric, weightToMetric} from './helper.js';
 /*
 NOTE1: calls document.getElementsByClassName() so comma seperated string of each className
 
@@ -191,7 +191,7 @@ function walkSeasonGamesHandler(menuItemId) {
 
         if (menuItemId === ID_WALK_SEASON) {
             console.log("in createJsonHandler");
-            modified = htmlParserLeagueSchedule();            
+            modified = htmlParserLeagueSchedule();
         }
 
         /* END CODE HERE */
@@ -654,7 +654,10 @@ function htmlParserAssistantTeamOverview() {
 }
 
 function htmlParserLeagueSchedule() {
-    console.log("in htmlParserLeagueSchedule");
+		//let boxscore = htmlParserGamePageBoxScore(UrlToDOM('https://gameplanhockey.com/game?gpid=373320-A'), 'https://gameplanhockey.com/game?gpid=373320-A');
+    //return
+	//
+		//console.log("in htmlParserLeagueSchedule");
     let element = document.getElementById("tabs-schedule");
     clickAndGetElement(element, [["tabs-schedule", 0]]) // ignore return
 
@@ -663,89 +666,67 @@ function htmlParserLeagueSchedule() {
     // Get all the Home/Away/Link 
     let seasonResults = [];
     for (let i = 7; i < 87; i++) {
-        let dayIdSel = `div [id='day-${i}']`; 
-        let dayDiv = contentDiv.querySelector(dayIdSel);
-        let dayGames = htmlParserDayDiv(dayDiv);
-        console.log("Day" + i.toString());
-        for (let j = 0; j < dayGames.length; j++) {
-            console.log(`Game ${j} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
-            let url = dayGames[j].Link;
-            let dom = UrlToDOM(url);
-            let results = htmlParserGamePageBoxScore(dom, url);
-            seasonResults.push(results);
-        }
+			let dayIdSel = `div [id='day-${i}']`; 
+			let dayDiv = contentDiv.querySelector(dayIdSel);
+			let dayGames = htmlParserDayDiv(dayDiv);
+			console.log(`Day ${i} --------------------------------------------`) 
+			for (let j = 0; j < dayGames.length; j++) {
+				console.log(`Day ${i} Game ${j+1} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
+				
+				let url = dayGames[j].Link;
+				let dom = UrlToDOM(url);
+
+				let boxscore = htmlParserGamePageBoxScore(dom, url);
+				let stats = htmlParserGamePageStats(dom);
+				let lineup = htmlParserGamePageLineUp(dom);
+
+				for (let k = 0; k < 2; k++) {
+					let tmpstats = stats[k];
+					let tmplineup = lineup[k];
+
+					var l = -1;
+					for (let po of tmpstats) {
+						l += 1;
+						for (let lo of tmplineup) {
+							if (po.url === lo.url) {
+								stats[k][l]['position'] = lo.position;
+								stats[k][l]['linenum'] = lo.linenum;
+							}
+						}
+					}
+				}
+
+				let results = {'boxscore': boxscore, 'playerstats': stats};
+				seasonResults.push(results);
+			}
     }
     let data = JSON.stringify(seasonResults);
     console.log(data);
     downloadJson('data.json', data);
 }
 
-function htmlParserGphmMeter(dli) {
-    let em = dli.querySelector('em');
-    let sibling = em.nextSibling;
-    let progress = dli.querySelector('.progress')
-    let span = progress.querySelector('span')
-    
-    let key = em.textContent.trim();
-    key = key.replaceAll(' ', '_');
-    key = key.toLowerCase();
-    key = key.replaceAt(0, key[0].toUpperCase());
-    
-    let idx = key.indexOf("_");
-    if ( idx !== -1) {
-        key = key.replaceAt(idx+1, key[idx+1].toUpperCase());
-    }
-
-    let val = sibling.textContent.trim();
-    let color = pullGPHMColorFromClassName(progress);
-    let width = span.style.width.trim();
-
-   return {'Key':key, 'Value':val, 'Color':color, 'Width':width}; 
-}
-
-function htmlParserGamePageStats() {
-    const TEAMNAME = "Mount Ayr Jordans"
-    let statsDiv = document.getElementById('stats');
-    let teams = statsDiv.querySelectorAll('.panel')
-    let found = false;
-
+function htmlParserDayDiv(dayDiv) {
     let ret = [];
-    for (let team of teams) {
-        let h2 = team.querySelector('h2');
-        if (h2.textContent.trim() !== TEAMNAME) {
+
+    let rows = dayDiv.querySelectorAll('tr');
+    for (row of rows) {
+        if (row.querySelectorAll('th').length > 0) {
             continue;
         }
-        found = true;
-
-        let table = team.querySelector('table');
-        let tbody = table.querySelector('tbody');
-        let rows = tbody.querySelectorAll('tr');
-        for (let row of rows) {
-            let tds = row.querySelectorAll('td');
-            playerstats = createGameStatsPlayerObject();
-
-            let key = GAMESTATPLAYERSTAT_ORDERED[0];
-            let valele = tds[0].querySelector('a');
-            let val = extractOnlyElementText(valele);
-            val = val.trim();
-            playerstats[key] = val;
-            
-            for (let i = 1; i < GAMESTATPLAYERSTAT_ORDERED.length; i++) {
-                let key = GAMESTATPLAYERSTAT_ORDERED[i];
-                playerstats[key] = tds[i].textContent.trim();
-            }
-            ret.push(playerstats);
-        }
-    }
-    if (found === false) {
-        console.log("Did not find stats for: " + TEAMNAME);
+        let tmp = {};
+        let tds = row.querySelectorAll('td');
+        
+        tmp['Home'] = tds[0].querySelector('a').title;
+        tmp['Away'] = tds[1].querySelector('a').title;
+        tmp['Link'] = tds[3].querySelector('a').href;
+        ret.push(tmp)
     }
     return ret;
 }
 
-function htmlParserGamePageBoxScore(dom, url) {
-    console.log("in htmlParserGamePageBoxScore");
-    let boxscoreDiv = dom.getElementById('boxscore');
+function htmlParserGamePageBoxScore(document, url) {
+    //console.log("in htmlParserGamePageBoxScore");
+    let boxscoreDiv = document.getElementById('boxscore');
 
     let cols = boxscoreDiv.querySelectorAll('.column');
     let leftcol = cols[0];
@@ -771,7 +752,6 @@ function htmlParserGamePageBoxScore(dom, url) {
     for (let i = 0; i < rows.length; i++) {
         let row = rows[i];
 
-        console.log(row.children[0]);
         let star = row.children[0].textContent.trim().match(/star/g).length;
         let player_link = row.children[1].href//.querySelector('a').href;
         let team_link = row.children[2].querySelector('a').href;
@@ -779,8 +759,6 @@ function htmlParserGamePageBoxScore(dom, url) {
 
         threeStarsData.push([star, player_link, team_link, points]); 
     }
-
-    console.log(threeStarsData);
 
 
     // Period Summary and Shots by Period
@@ -790,7 +768,7 @@ function htmlParserGamePageBoxScore(dom, url) {
    
     const STAT = ['G', 'S']
     for (let i = 0; i < tableByPeriods.length; i++) {
-        let table = tableByPeriods[i];
+			let table = tableByPeriods[i];
         let stat = STAT[i];
         rows = table.querySelectorAll('tr');
         const TEAMS = ['SKIPME', 'Home', 'Away'];
@@ -834,23 +812,122 @@ function htmlParserGamePageBoxScore(dom, url) {
     return sbp;
 }
 
-function htmlParserDayDiv(dayDiv) {
-    let ret = [];
+function htmlParserGamePageStats(document) {
+	//console.log("in htmlParserGamePageStats()")
 
-    let rows = dayDiv.querySelectorAll('tr');
-    for (row of rows) {
-        if (row.querySelectorAll('th').length > 0) {
-            continue;
-        }
-        let tmp = {};
-        let tds = row.querySelectorAll('td');
-        
-        tmp['Home'] = tds[0].querySelector('a').title;
-        tmp['Away'] = tds[1].querySelector('a').title;
-        tmp['Link'] = tds[3].querySelector('a').href;
-        ret.push(tmp)
+	let blackmenu = document.getElementById('tab-stats');
+	let stats_tab =  blackmenu.getElementsByClassName('tab-menu__link');
+	stats_tab[0].click();
+
+	let statsDiv = document.getElementById('stats');
+	let team_player_stats = statsDiv.querySelectorAll('.panel')
+
+	let ret = [[], []];
+	i = -1;
+	for (let team of team_player_stats) {
+			i += 1;
+			let table = team.querySelector('table');
+			let tbody = table.querySelector('tbody');
+			let rows = tbody.querySelectorAll('tr');
+			for (let row of rows) {
+					let tds = row.querySelectorAll('td');
+					playerstats = createGameStatsPlayerObject();
+
+					let key = GAMESTATPLAYERSTAT_ORDERED[0];
+					let valele = tds[0].querySelector('a');
+					let val = extractOnlyElementText(valele);
+					val = val.trim();
+					playerstats[key] = val;
+					
+					for (let j = 1; j < GAMESTATPLAYERSTAT_ORDERED.length; j++) {
+							let key = GAMESTATPLAYERSTAT_ORDERED[j];
+							playerstats[key] = tds[j].textContent.trim();
+					}
+					
+					let url = gphmRelToURL(valele.rel);
+					playerstats['url'] = url;
+					
+					ret[i].push(playerstats);
+			}
     }
     return ret;
+}
+
+function htmlParserGamePageLineUp(document) {
+	//console.log("in htmlParserGamePageLineUp()");
+
+	let blackmenu = document.getElementById('tab-lineup');
+	let lineup_tab =  blackmenu.getElementsByClassName('tab-menu__link');
+	lineup_tab[0].click();
+
+	let lineupdiv = document.getElementById('lineup');
+	let table = lineupdiv.getElementsByTagName('table');
+	let rows = table[0].getElementsByTagName('tr');
+	
+	var lineup_array = [[], []];
+  var linename = "START";
+	for (let tr of rows) {
+		let tds = tr.getElementsByTagName('td');
+		if (tds.length !== 3) {
+			let ths = tr.getElementsByTagName('th');
+			linename = ths[0].textContent;
+			if (ths[0].children.length > 0) {
+				linename = ths[0].children[0].textContent; // avoid "1st defense1st def"
+			}
+		}
+		else
+		{
+			for (let i = 1; i < tds.length; i++) {
+					let playerlink = tds[i].getElementsByClassName('player-link')[0];
+					var tmp = playerlink.textContent.split(' ');
+					let name = tmp.slice(1).join(" ");
+
+					let url = gphmRelToURL(playerlink.rel);   
+					
+					let pos = tds[0].childNodes[1].textContent.trim();
+					let linenum = -1;
+					if (linename.indexOf('line') !== -1) { linenum = parseInt(linename.charAt(0)); }
+					else if (linename.indexOf('defence') !== -1) { linenum = parseInt(linename.charAt(0)); }
+					else { pos = 'G'; }
+					
+					let player = {'name': name, 'position': pos, 'linenum': linenum, 'url': url};
+				 
+					lineup_array[i-1].push(player);
+				}   
+			}
+    }
+		return lineup_array;
+}
+
+function htmlParserGphmMeter(dli) {
+    let em = dli.querySelector('em');
+    let sibling = em.nextSibling;
+    let progress = dli.querySelector('.progress')
+    let span = progress.querySelector('span')
+    
+    let key = em.textContent.trim();
+    key = key.replaceAll(' ', '_');
+    key = key.toLowerCase();
+    key = key.replaceAt(0, key[0].toUpperCase());
+    
+    let idx = key.indexOf("_");
+    if ( idx !== -1) {
+        key = key.replaceAt(idx+1, key[idx+1].toUpperCase());
+    }
+
+    let val = sibling.textContent.trim();
+    let color = pullGPHMColorFromClassName(progress);
+    let width = span.style.width.trim();
+
+   return {'Key':key, 'Value':val, 'Color':color, 'Width':width}; 
+}
+
+function gphmRelToURL(rel) {
+	tmp = rel.split('/');
+	let playertype = tmp[0].slice(0, -1);
+	let playerid = tmp[1];
+	let url = `https://gameplanhockey.com/${playertype}?gpid=${playerid}`;
+	return url;
 }
 
 /********************************************************
