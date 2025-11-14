@@ -671,7 +671,7 @@ function htmlParserLeagueSchedule() {
         let dayGames = htmlParserDayDiv(dayDiv);
         console.log("Day" + i.toString());
         for (let j = 0; j < dayGames.length; j++) {
-            console.log(`Game ${j} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
+            console.log(`DAY ${i} Game ${j} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
             let url = dayGames[j].Link;
             let dom = UrlToDOM(url);
             let results = htmlParserGamePageBoxScore(dom, url);
