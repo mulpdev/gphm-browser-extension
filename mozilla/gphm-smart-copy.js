@@ -105,6 +105,7 @@ const FA_FPO_ATTRIBS = [
 const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
 const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
+const ID_COPY_PLAYER_PAGE = "gphm-smart-copy-player-page";
 const ID_WALK_SEASON = "gphm-smart-copy-league-season";
 
 const OUTPUT_FORMAT = {
@@ -128,6 +129,9 @@ function copyToClipboardHandler(menuItemId) {
         if (menuItemId === ID_COPY_SCOUTING_PROFILE) {
             modified = htmlParserScoutingProfile();
         }
+				else if (menuItemId === ID_COPY_PLAYER_PAGE) {
+            modified = htmlParserPlayerPage();
+				}
         else {
             let popupClassName = "f-dropdown content player-dropdown open";
             let fakePlayerObj = htmlParserPopup(popupClassName, 0);
@@ -468,10 +472,10 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
     // Click and update handle to popup on new Document DOM
 
     let clickme = popup.querySelector('.player-dropdown__toggler, .top-ratings');
-    popup = clickAndGetElement(clickme, [[popupClassName, popupClassIndex]]);
+    popup = clickAndGetElement_popuphidden(clickme, [[popupClassName, popupClassIndex]]);
 
     clickme = popup.querySelector('.player-dropdown__toggler, .all-traits');
-    popup = clickAndGetElement(clickme, [[popupClassName, popupClassIndex]]);
+    popup = clickAndGetElement_popuphidden(clickme, [[popupClassName, popupClassIndex]]);
 
     // then get newly UNhidden all-ratings section
     ratingsList = popup.querySelector('.player-dropdown__ratings.rating-list.all-ratings'); // className starts with . and all spaced converted to .
@@ -659,7 +663,7 @@ function htmlParserLeagueSchedule() {
 	//
 		//console.log("in htmlParserLeagueSchedule");
     let element = document.getElementById("tabs-schedule");
-    clickAndGetElement(element, [["tabs-schedule", 0]]) // ignore return
+    clickAndGetElement_popuphidden(element, [["tabs-schedule", 0]]) // ignore return
 
     let contentDiv = document.getElementById('content');
 
@@ -930,6 +934,184 @@ function gphmRelToURL(rel) {
 	return url;
 }
 
+function htmlParserPlayerPage() {
+	let page = document;
+
+	let fakePlayerObj = createFakePlayerObject();
+	tmp = page.querySelector('.heading-two-piece__first');
+	fakePlayerObj.Name = tmp.textContent.trim();
+	fakePlayerObj.Name += ' ';
+
+	tmp = page.querySelector('.heading-two-piece__sur');
+	console.log(tmp)
+	fakePlayerObj.Name += tmp.textContent.trim();
+
+	tmp = page.querySelector('.team-jersey__playernumber');
+	if (tmp !== null) { fakePlayerObj.Number = tmp.textContent; }
+	else { fakePlayerObj.Number = 'FA'; }
+
+	console.log("orange bar");
+	tmp = page.querySelectorAll('.game-top__info__row__part');
+	console.log(tmp);
+	fakePlayerObj.position = tmp[0].textContent.trim();
+	let blackBar_txt = tmp[1].textContent.trim();
+
+	/* Orange bar: Age, Height, Weight, Hand */
+	spl = blackBar_txt.split('·') // hovering period symbol
+	fakePlayerObj.Age = spl[0].trim();
+
+	tmpH = spl[1].trim().toLowerCase();
+
+	if (tmpH.includes("cm")) {
+			splA = tmpH.split("'");
+			feet = splA[0].trim();
+
+			splB = splA[1].split('"');
+			inches = splB[0].trim();
+
+			fakePlayerObj.Height = heightToMetric(feet, inches);
+	}
+	else {
+			fakePlayerObj.Height = tmpH.trim();
+	}
+
+	tmpW = spl[2].trim().toLowerCase();
+	if (tmpW.includes("kg")) {
+			splC = tmpW.split(' ');
+			fakePlayerObj.Weight = weightToMetric(splC[0]);
+	}
+	else {
+			fakePlayerObj.Weight = tmpW.trim();
+	}
+ 
+	console.log(fakePlayerObj);
+
+	/* Tabs which must be clicked open */
+	// Click and update handle to page on new Document DOM
+	var blackbar = page.querySelector('.game-top__tab-menu');
+	var blackbar_alist = blackbar.querySelectorAll('a');
+	var a_rating = blackbar_alist[2];
+	clickBlackBarTab(a_rating);
+	console.log("clicked");
+	var rating_lists = document.querySelectorAll('.rating-list');
+
+	for (let rating_list of rating_lists) {
+		var rating_names = rating_list.querySelectorAll('dt');
+		var rating_numbers = rating_list.querySelectorAll('dd');
+
+		for (let i =0; i < rating_names.length; i++) {
+			console.log(`! ${rating_names[i].textContent.trim()} ${rating_numbers[i].textContent.trim()}`);
+		}
+	}
+
+	var season_dev = document.querySelector('.development');
+	console.log(season_dev);
+	var options = season_dev.querySelectorAll('option');
+	console.log(options);
+	var season_ratings = {};
+	for (let option of options) {
+		var vals = new Set();
+		var name = option.textContent.trim();
+		console.log(name);
+		console.log(option.value);
+		var spl = option.value.split(',');
+		for (let v of spl) {
+			console.log(v);
+			vals.add(v);
+		}
+
+		season_ratings[name] = vals;
+	}
+	console.log(season_ratings);
+
+
+
+	var career_ratings = document.getElementById('rating-select-career');
+	console.log(career_ratings);
+	var options = career_ratings.querySelectorAll('option');
+	console.log(options);
+	var career_dev = {};
+	for (let option of options) {
+		var vals = [];
+		var name = option.textContent.trim();
+		console.log(name);
+		console.log(option.value);
+		var spl = option.value.split(',');
+		for (let v of spl) {
+			console.log(v);
+			vals.push(v);
+		}
+
+		career_dev[name] = vals;
+	}
+	console.log(career_dev);
+
+	// Click and update handle to page on new Document DOM
+	var a_stats = blackbar_alist[3];
+	clickBlackBarTab(a_stats);
+	console.log("clicked");
+
+	var table = document.getElementById('player-stats');
+	//var table = document.querySelector('.table-display');
+	console.table(table);
+	var tbody = table.querySelectorAll('tbody');
+	console.log(tbody);
+	for (let i = 0; i < 3; i++) {
+		var row = tbody[0].children[i];
+		console.log(row);
+		var tds = row.children;
+		console.log(tds);
+		var league = tds[2].textContent.trim();
+		var g = tds[4].textContent.trim();
+		var a = tds[5].textContent.trim();
+		var pts = tds[6].textContent.trim();
+		var perf = tds[21].textContent.trim();
+		console.log(`${league} ${g} ${a} ${pts} ${perf}`);
+	}
+
+	// Click and update handle to page on new Document DOM
+	var a_profile = blackbar_alist[5];
+	clickBlackBarTab(a_profile);
+	console.log("clicked");
+	var profile = document.getElementById('profile');
+	console.log(profile);
+	var panels = profile.querySelectorAll('.panel');
+	console.log(panels);
+
+	// player traits
+	var panel0 = panels[0];
+	console.log(panel0);
+	var lis = panel0.querySelectorAll('li');
+	console.log(lis);
+	for (li of lis) {
+		var spans = li.querySelectorAll('span');
+		console.log(spans);
+		let color = pullGPHMColorFromClassName(spans[0]);
+		console.log(color);
+		let trait = spans[0].textContent.trim();
+		console.log(trait);
+
+	// Profile
+	var panel1 = panels[1];
+	var lis = panel1.querySelectorAll('li');
+	console.log(lis);
+	for (li of lis) {
+		var spans = li.querySelectorAll('span');
+		console.log(spans);
+		let color = pullGPHMColorFromClassName(spans[0]);
+		console.log(color);
+		let trait = spans[0].textContent.trim();
+		console.log(trait);
+	}
+
+	// Click and update handle to page on new Document DOM
+	var a_bio = blackbar_alist[6];
+}
+
+
+
+
+}
 /********************************************************
 Helper Functions
 ********************************************************/
@@ -1013,8 +1195,12 @@ function clickDropdownByOptionValue(dropdown, optionvalue) {
     const event = new Event('change');
     dropdown.dispatchEvent(event);
 }
+function clickBlackBarTab(tabbar_ele) {
+	console.log(tabbar_ele);
+	tabbar_ele.click();
+}
 
-function clickAndGetElement(clickEle, classname_and_idx) {
+function clickAndGetElement_popuphidden(clickEle, classname_and_idx) {
     clickEle.click();
 
     let ele = document;
