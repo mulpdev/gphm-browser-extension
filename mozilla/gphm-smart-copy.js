@@ -18,12 +18,16 @@ const RATINGS = ['Skating', 'Passing', 'PuckHandling', 'Shooting', 'Defence', 'P
 const GOALIE_RATINGS = ['Reflexes', 'Positioning', 'PuckControl', 'PuckHandling', 'Athletic', 'Endurance', 'Spirit'];
 const TRAITS = ['Ego', 'Dirty', 'Leadership', 'BigGames', 'Ambition', 'Greed', 'Persona', 'Culture', 'Winner'];
 const PROFILE = ['Persona', 'Culture', 'Winner'];
-const SEASONSTATS = ['Reputation', 'Confidence', 'Health', 'League'];
-const SEASONSTATS_SKATER = ['GP', 'G', 'A', 'PTS', 'PIM', 'PER'];
-const SEASONSTATS_GOALIE = ['GP', 'GAA', 'SO', 'SV%', 'PER'];
+const CURRENTSEASONSTATS = ['Reputation', 'Confidence', 'Health', 'League'];
+const CURRENTSEASONSTATS_SKATER = ['GP', 'G', 'A', 'PTS', 'PIM', 'PER'];
+const CURRENTSEASONSTATS_GOALIE = ['GP', 'GAA', 'SO', 'SV%', 'PER'];
 const TRADE = [ 'Status', 'TradeValue', 'Salary', 'Years', 'Clause', 'Happiness'];
-const CUSTOM = ['STATLINE', 'SPREADSHEET_LINK'];
-const ATTRIBS = [].concat(BIO, RATINGS, TRAITS, SEASONSTATS, CUSTOM);
+const PLAYER_TEAM = ['Current Team'];
+const PLAYER_STATS = ['Season', 'SeasonAdvanced', 'Playoff', 'PlayoffAdvanced'];
+const CUSTOM = ['STATLINE', 'SPREADSHEET_LINK', 'DEVELOPMENT_SEASON', 'DEVELOPMENT_CAREER'];
+const ATTRIBS = [].concat(BIO, RATINGS, TRAITS, CURRENTSEASONSTATS, PLAYER_TEAM, CUSTOM);
+
+const HOVERING_DOT_CHAR = '·' // hovering period symbol, seen in Orange Bar etc
 const OUTPUT_DELIM_RATINGS_MARKER = 'QWERTY';
 const GAMESTATPLAYERSTAT_ORDERED = ['Player', 'G', 'A', 'PTS', "'+/-", 'PIM', 'S', 'HT', 'BKS', 'GVA', 'TKA', 'FO%', 'PP TOI', 'SH TOI', 'TOI', 'PER'];
 
@@ -41,7 +45,7 @@ const DB_FPO_ATTRIBS = [
     ALL_ATTRIBS_OBJ.Weight,
     ALL_ATTRIBS_OBJ.Hand,
     ALL_ATTRIBS_OBJ.Role,
-    ALL_ATTRIBS_OBJ.Overall,
+	ALL_ATTRIBS_OBJ.Overall,
     ALL_ATTRIBS_OBJ.Confidence,
     ALL_ATTRIBS_OBJ.Health,
     ALL_ATTRIBS_OBJ.Name,
@@ -102,6 +106,7 @@ const FA_FPO_ATTRIBS = [
     ALL_ATTRIBS_OBJ.STATLINE,
 ];
 
+
 const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
 const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
@@ -130,7 +135,9 @@ function copyToClipboardHandler(menuItemId) {
             modified = htmlParserScoutingProfile();
         }
 				else if (menuItemId === ID_COPY_PLAYER_PAGE) {
-            modified = htmlParserPlayerPage();
+            fakePlayerObj = htmlParserPlayerPage();
+						console.log(fakePlayerObj);
+            modified = formatFakePlayerObject(fakePlayerObj, FA_FPO_ATTRIBS, 'UNK?', '\t');
 				}
         else {
             let popupClassName = "f-dropdown content player-dropdown open";
@@ -917,7 +924,7 @@ function htmlParserGphmMeter(dli) {
     let idx = key.indexOf("_");
     if ( idx !== -1) {
         key = key.replaceAt(idx+1, key[idx+1].toUpperCase());
-    }
+		}
 
     let val = sibling.textContent.trim();
     let color = pullGPHMColorFromClassName(progress);
@@ -935,35 +942,34 @@ function gphmRelToURL(rel) {
 }
 
 function htmlParserPlayerPage() {
-	let page = document;
-
 	let fakePlayerObj = createFakePlayerObject();
-	tmp = page.querySelector('.heading-two-piece__first');
+	fakePlayerObj.HYPERLINK = window.location.href;
+
+	// Page "Header" --------------------
+	var tmp = document.querySelector('.heading-two-piece__first');
 	fakePlayerObj.Name = tmp.textContent.trim();
 	fakePlayerObj.Name += ' ';
 
-	tmp = page.querySelector('.heading-two-piece__sur');
-	console.log(tmp)
+	tmp = document.querySelector('.heading-two-piece__sur');
 	fakePlayerObj.Name += tmp.textContent.trim();
 
-	tmp = page.querySelector('.team-jersey__playernumber');
+	tmp = document.querySelector('.team-jersey__playernumber');
 	if (tmp !== null) { fakePlayerObj.Number = tmp.textContent; }
 	else { fakePlayerObj.Number = 'FA'; }
 
-	console.log("orange bar");
-	tmp = page.querySelectorAll('.game-top__info__row__part');
-	console.log(tmp);
-	fakePlayerObj.position = tmp[0].textContent.trim();
-	let blackBar_txt = tmp[1].textContent.trim();
+	tmp = document.querySelectorAll('.game-top__info__row__part');
+	fakePlayerObj.Position = tmp[0].textContent.trim();
+	let orangeBar_txt = tmp[1].textContent.trim();
 
-	/* Orange bar: Age, Height, Weight, Hand */
-	spl = blackBar_txt.split('·') // hovering period symbol
-	fakePlayerObj.Age = spl[0].trim();
+	// Orange bar --------------------
+	//spl = orangeBar_txt.split('·') // hovering period symbol
+	spl = orangeBar_txt.split(HOVERING_DOT_CHAR)
+	let agestr = spl[0].trim();
+	fakePlayerObj.Age = parseInt(agestr.split(' ')[0]);
 
-	tmpH = spl[1].trim().toLowerCase();
-
+	let tmpHW = spl[1].trim().toLowerCase();
+	let tmpH = tmpHW.split(' ')[0]; 
 	if (tmpH.includes("cm")) {
-			splA = tmpH.split("'");
 			feet = splA[0].trim();
 
 			splB = splA[1].split('"');
@@ -975,7 +981,7 @@ function htmlParserPlayerPage() {
 			fakePlayerObj.Height = tmpH.trim();
 	}
 
-	tmpW = spl[2].trim().toLowerCase();
+	let tmpW = tmpHW.split(' ')[1]; 
 	if (tmpW.includes("kg")) {
 			splC = tmpW.split(' ');
 			fakePlayerObj.Weight = weightToMetric(splC[0]);
@@ -984,137 +990,243 @@ function htmlParserPlayerPage() {
 			fakePlayerObj.Weight = tmpW.trim();
 	}
  
-	console.log(fakePlayerObj);
-
-	/* Tabs which must be clicked open */
-	// Click and update handle to page on new Document DOM
-	var blackbar = page.querySelector('.game-top__tab-menu');
-	var blackbar_alist = blackbar.querySelectorAll('a');
-	var a_rating = blackbar_alist[2];
-	clickBlackBarTab(a_rating);
-	console.log("clicked");
-	var rating_lists = document.querySelectorAll('.rating-list');
-
-	for (let rating_list of rating_lists) {
-		var rating_names = rating_list.querySelectorAll('dt');
-		var rating_numbers = rating_list.querySelectorAll('dd');
-
-		for (let i =0; i < rating_names.length; i++) {
-			console.log(`! ${rating_names[i].textContent.trim()} ${rating_numbers[i].textContent.trim()}`);
-		}
+	// Ratings Tab -----------
+	clickPlayerPageTab('Rating');
+	let ratings_div = document.getElementById('ratings');
+	while (ratings_div === undefined || ratings_div === null) {
+			setTimeout(console.log(`timeout. ratings_div is undefined/null`), 500);
+			ratings_div = document.getElementById('ratings');
 	}
 
-	var season_dev = document.querySelector('.development');
-	console.log(season_dev);
-	var options = season_dev.querySelectorAll('option');
-	console.log(options);
-	var season_ratings = {};
-	for (let option of options) {
-		var vals = new Set();
-		var name = option.textContent.trim();
-		console.log(name);
-		console.log(option.value);
-		var spl = option.value.split(',');
-		for (let v of spl) {
-			console.log(v);
-			vals.add(v);
-		}
 
-		season_ratings[name] = vals;
+	waitForElement(ratings_div);
+	let ratings_panels = ratings_div.getElementsByClassName('panel');
+	/*
+	const intervalId = setInterval(() => {
+    // Select the element we want to wait for
+    const targetElement = document.getElementById('my-element');
+
+    if (ratings_panels.length > 1) {
+        // Stop checking for the element
+        clearInterval(intervalId);
+        console.log('Element is now available');
+				*/
+						console.log(ratings_panels);
+						let player_ratings = ratings_panels[0];
+						console.log(player_ratings);
+						let development_season = ratings_panels[1];
+						console.log(development_season);
+						let development_career = ratings_panels[2];
+						console.log(development_career);
+						let development_progress = ratings_panels[3];
+						console.log(development_progress);
+
+						let rating_lists = player_ratings.getElementsByClassName('rating-list');
+						for (let rating_list of rating_lists) {
+							let rating_names = rating_list.querySelectorAll('dt');
+							let rating_numbers = rating_list.querySelectorAll('dd');
+
+							for (let i =0; i < rating_names.length; i++) {
+								let k = gphmConvertToPlayerObjAttributeName(rating_names[i].textContent.trim());
+								let v = rating_numbers[i].textContent.trim();
+								fakePlayerObj[k] = v;
+							}
+						}
+
+						var options = development_season.querySelectorAll('option');
+						var season_development_ratings = {};
+						for (let option of options) {
+							var vals = new Set();
+							var name = option.textContent.trim();
+							var spl = option.value.split(',');
+							for (let v of spl) {
+								vals.add(v);
+							}
+							season_development_ratings[name] = vals;
+						}
+						fakePlayerObj['DEVELOPMENT_SEASON'] = season_development_ratings;
+
+						var options = development_career.querySelectorAll('option');
+						var career_dev_overall = {};
+						for (let option of options) {
+							var vals = [];
+							var name = option.textContent.trim();
+							var spl = option.value.split(',');
+							for (let v of spl) {
+								vals.push(v);
+							}
+							career_dev_overall[name] = vals;
+						}
+						fakePlayerObj['DEVELOPMENT_CAREER'] = career_dev_overall;
+
+
+						// Extract variable from script text
+						let barchart_script = development_progress.getElementsByTagName('script')[0];
+						let qwerty = barchart_script.text.replaceAll('\n', '');
+
+						let startstr = "data: ["
+						let a = qwerty.indexOf(startstr) + startstr.length + 1;
+						let astr = qwerty.slice(a);
+						astr = astr.replaceAll(',\n');
+						let b = astr.indexOf(']');
+						let bstr = astr.slice(0, b);
+						let cstr = bstr.replaceAll(' ', '')
+						let cstr_spl = cstr.split(',');
+
+						let OUT_OF_ORDER_RATINGS = ['Shooting', 'Skating', 'Passing', 'PuckHandling', 'Faceoffs', 'Physical', 'Endurance', 'Defense', 'Spirit'];
+						let tmparr = [];
+						for (let i = 0; i < cstr_spl.length-1; i++) {
+							let k = OUT_OF_ORDER_RATINGS[i];
+							let v = cstr_spl[i];
+							if (v === '') { continue; }
+							else {
+								tmparr.push(v);
+							}
+						}
+						fakePlayerObj['DEVELOPMENT_CURRENT_PROGRESS'] = { 'progress': tmparr, 'ratings_order': OUT_OF_ORDER_RATINGS }
+/*
+						console.log("INTERVAL DONE");
+    }
+}, 100);
+*/
+	// Stats Tab -----------
+	clickPlayerPageTab('Stats');
+	let player_stats_div = document.getElementById('player-stats');
+	if (fakePlayerObj.Position === 'Goalie') {
+		player_stats_div = document.getElementById('goalie-stats'); 
 	}
-	console.log(season_ratings);
-
-
-
-	var career_ratings = document.getElementById('rating-select-career');
-	console.log(career_ratings);
-	var options = career_ratings.querySelectorAll('option');
-	console.log(options);
-	var career_dev = {};
-	for (let option of options) {
-		var vals = [];
-		var name = option.textContent.trim();
-		console.log(name);
-		console.log(option.value);
-		var spl = option.value.split(',');
-		for (let v of spl) {
-			console.log(v);
-			vals.push(v);
-		}
-
-		career_dev[name] = vals;
-	}
-	console.log(career_dev);
-
-	// Click and update handle to page on new Document DOM
-	var a_stats = blackbar_alist[3];
-	clickBlackBarTab(a_stats);
-	console.log("clicked");
-
-	var table = document.getElementById('player-stats');
-	//var table = document.querySelector('.table-display');
-	console.table(table);
-	var tbody = table.querySelectorAll('tbody');
+	console.log(player_stats_div);
+	var tbody = player_stats_div.querySelectorAll('tbody');
 	console.log(tbody);
+
+	let regular_season_stats = []
 	for (let i = 0; i < 3; i++) {
+		var statrow = {};
 		var row = tbody[0].children[i];
-		console.log(row);
 		var tds = row.children;
-		console.log(tds);
-		var league = tds[2].textContent.trim();
-		var g = tds[4].textContent.trim();
-		var a = tds[5].textContent.trim();
-		var pts = tds[6].textContent.trim();
-		var perf = tds[21].textContent.trim();
-		console.log(`${league} ${g} ${a} ${pts} ${perf}`);
-	}
 
-	// Click and update handle to page on new Document DOM
-	var a_profile = blackbar_alist[5];
-	clickBlackBarTab(a_profile);
-	console.log("clicked");
-	var profile = document.getElementById('profile');
-	console.log(profile);
-	var panels = profile.querySelectorAll('.panel');
+		STATS_TAB_SKATER = ['Season','Team','League','GP','G','A','PTS','+/-','PIM','MP','FM','PPG','PPA','SHG','SHA','S','HT','FOW','FOL','FO%','TOI','PER'];
+		STATS_TAB_GOALIE = ['Season','Team','League','GP','GS','MIN','W','L','OTL','GA','GAA','SA','SV','SV%','SO','PER'];
+		for (let j = 0; j < tds.length; j++) {
+			let td = tds[j];
+			if (fakePlayerObj.Position === 'Goalie') { statrow[STATS_TAB_GOALIE[j]] = td.textContent.trim(); }
+			else { statrow[STATS_TAB_SKATER[j]] = td.textContent.trim(); }
+		}
+
+		fakePlayerObj.League = statrow['League'];  
+		if (fakePlayerObj.Position === 'Goalie') {
+			fakePlayerObj.GAA = statrow['GAA'];
+			fakePlayerObj.SO = statrow['SO'];
+			fakePlayerObj['SV%'] = statrow['SV%'];
+			fakePlayerObj['STATLINE'] = fakePlayerObj.GAA + '/' + fakePlayerObj.SO + '/' + fakePlayerObj['SV%'] + ', ' + fakePlayerObj.League;
+		}
+		else { 
+			fakePlayerObj.G = statrow['G'];
+			fakePlayerObj.A = statrow['A'];
+			fakePlayerObj.PTS = statrow['PTS'];
+			fakePlayerObj.PIM = statrow['PIM'];
+			fakePlayerObj['STATLINE'] = fakePlayerObj.G + '/' + fakePlayerObj.A + '/' + fakePlayerObj.PTS + ", " + fakePlayerObj.PIM + ", " + fakePlayerObj.League;
+		}
+
+		regular_season_stats.push(statrow);
+	}
+	fakePlayerObj['REGULAR_SEASON_STATS'] = regular_season_stats;
+
+	// Profile Tab -----------
+	clickPlayerPageTab('Profile');
+	let profile_div = document.getElementById('profile');
+	let profile_panels = profile_div.querySelectorAll('.panel');
+	let player_traits_panel = profile_panels[0];
+	let player_psych_profile = profile_panels[1];
+	let player_roles = profile_panels[2];
+
+	let trait_lis = player_traits_panel.querySelectorAll('li');
+	let profile_traits = [];
+	for (let li of trait_lis) {
+		var spans = li.querySelectorAll('span');
+		let color = pullGPHMColorFromClassName(spans[0]);
+		let trait = spans[0].textContent.trim();
+		profile_traits.push([trait, color]);
+	}
+	fakePlayerObj.Ego = profile_traits[0][0];
+	fakePlayerObj.Dirty = profile_traits[1][0];
+	fakePlayerObj.Leadership = profile_traits[2][0];
+	fakePlayerObj.BigGames = profile_traits[3][0];
+	fakePlayerObj.Ambition = profile_traits[4][0];
+	fakePlayerObj.Greed = profile_traits[5][0];
+
+	var psych_lis = player_psych_profile.querySelectorAll('li');
+	let psych_traits = []
+	for (let li of psych_lis) {
+		var spans = li.querySelectorAll('span');
+		let color = pullGPHMColorFromClassName(spans[0]);
+		let trait = spans[0].textContent.trim();
+		psych_traits.push([trait, color]);
+	}
+	fakePlayerObj.Persona = psych_traits[0][0];
+	fakePlayerObj.Culture = psych_traits[1][0];
+	fakePlayerObj.Winner = psych_traits[2][0];
+
+	// Bio tab -----------
+	clickPlayerPageTab('Bio');
+	let biodiv = document.getElementById('bio');
+	console.log(biodiv);
+	let panels = biodiv.getElementsByClassName('panel');
+	while (panels.length < 1) {
+		setTimeout(console.log(`timeout biopanels ${i}`), 2000);
+		panels = biodiv.getElementsByClassName('panel');
+	}
+	console.log(`panels.length = ${panels.length}`);
 	console.log(panels);
+	let player_details = panels[0];
+	let drafted = panels[1];
+	let career_highlights = panels[2];
 
-	// player traits
-	var panel0 = panels[0];
-	console.log(panel0);
-	var lis = panel0.querySelectorAll('li');
-	console.log(lis);
-	for (li of lis) {
-		var spans = li.querySelectorAll('span');
-		console.log(spans);
-		let color = pullGPHMColorFromClassName(spans[0]);
-		console.log(color);
-		let trait = spans[0].textContent.trim();
-		console.log(trait);
-
-	// Profile
-	var panel1 = panels[1];
-	var lis = panel1.querySelectorAll('li');
-	console.log(lis);
-	for (li of lis) {
-		var spans = li.querySelectorAll('span');
-		console.log(spans);
-		let color = pullGPHMColorFromClassName(spans[0]);
-		console.log(color);
-		let trait = spans[0].textContent.trim();
-		console.log(trait);
+	// Loop to grab all list "key" and "values"
+	// There is only 1 ul element, so we can skip straight to li elements
+	let data_list = player_details.getElementsByTagName('li');
+	for (let li of data_list) {
+		let li_kv = gphmGetKeyValueOfListItem(li);
+		let key = li_kv[0];
+		let val = li_kv[1];
+		if (key === 'Shoots') { fakePlayerObj.Hand = val; }
 	}
-
-	// Click and update handle to page on new Document DOM
-	var a_bio = blackbar_alist[6];
+	console.log("FUCK JAVASCRIPT");
+	return fakePlayerObj;
 }
 
-
-
-
-}
 /********************************************************
 Helper Functions
 ********************************************************/
+function gphmConvertToPlayerObjAttributeName(str) {
+	let spl = str.split(' ');
+	let ret = '';
+	for (let word of spl) {
+		ret += word[0].toUpperCase() + word.substr(1);
+	}
+	return ret;
+}
+
+function gphmGetKeyValueOfListItem(li) {
+	let key = li.getElementsByTagName('em')[0].textContent;
+	let value = processChildTextNodesOfElement(li);
+	return [key, value];
+}
+
+function processChildTextNodesOfElement(element) {
+	var textnodes = [];
+	var text = "";
+	for (var i = 0; i < element.childNodes.length; i++) {
+		let child_node = element.childNodes[i];
+		if (child_node.nodeType === Node.TEXT_NODE) {
+			textnodes.push(child_node);
+			text += child_node.textContent;
+		}
+	}
+
+	//return [text, textnodes];
+	return text;
+}
 
 function createFakePlayerObject() {
     let fakePlayerObj = { };
@@ -1169,9 +1281,44 @@ function formatFakePlayerObject(fakePlayerObj, attribs, DEFAULT_VAL, SEP) {
                 val = tmp;
             }
         }
+				//console.log(`${A}: ${val}`);
         ret += val;
         ret += SEP;
     }
+
+		if (fakePlayerObj.Age < 18) {
+			// JHL 3 season performance
+			let perf = '';
+			let Z = 20 - fakePlayerObj.Age;
+			for (let i = 0; i < Z; i++) {
+				perf += `${fakePlayerObj['REGULAR_SEASON_STATS'][i]['PER']},`;
+			}
+			ret += perf.slice(0,-1);
+			ret += SEP;
+
+			// Growth current season
+			// .3 maybe (Several 50%+) 
+			// .6 possibly (Most 50%+)  
+			// .9 likely (Most 70%+)
+			
+			let growthOvr = fakePlayerObj['DEVELOPMENT_SEASON']['Overall'].size; // Set() uses size not length
+
+			let gt50 = 0;
+			let gt70 = 0;
+			let progress_percentage = fakePlayerObj['DEVELOPMENT_CURRENT_PROGRESS']['progress'];
+			for (let p of progress_percentage) {
+				if (p >= 70) { gt70 += 1; gt50 += 1; }
+				else if (p >= 50) {gt50 += 1; }
+			}
+
+			if (gt70 >= 6) { growthOvr += 0.9; }
+			else if (gt50 >= 6) { growthOvr += 0.6; }
+			else if (gt50 >= 4) { growthOvr += 0.3; }
+			else { growthOvr += 0.0; }
+			
+			ret += growthOvr.toFixed(1); // Float
+			ret += SEP;
+		}
 
     return ret;
 }
@@ -1195,9 +1342,67 @@ function clickDropdownByOptionValue(dropdown, optionvalue) {
     const event = new Event('change');
     dropdown.dispatchEvent(event);
 }
-function clickBlackBarTab(tabbar_ele) {
-	console.log(tabbar_ele);
-	tabbar_ele.click();
+async function waitForElement(ele) {
+	// or return the new Promise
+  await new Promise(resolve => {
+    // First, check if the element already exists.
+	;
+    if (ele.getElementsByClassName('panel').length > 1) {
+			console.log(ele.getElementsByClassName('panel').length)
+			return
+    }
+
+    // If not, create an observer to watch for changes.
+    const observer = new MutationObserver(mutations => {
+			if (ele.getElementsByClassName('panel').length > 1) {
+        observer.disconnect(); // Stop observing once the element is found.
+        resolve();
+      }
+    });
+
+    // Start observing the document body for child list changes.
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  });
+	console.log("promise done");
+	return
+}
+async function clickPlayerPageTab(tabName) {
+	let blackbar = document.querySelector('.game-top__tab-menu');
+	let blackbar_alist = blackbar.querySelectorAll('a');
+
+	for (let a of blackbar_alist) {
+		if (a.textContent.toLowerCase() === tabName.toLowerCase())
+		{
+			//let oldactiveid = document.getElementsByClassName('active')[0].id;
+			//console.log(`OLD active = ${oldactiveid}`);
+
+	let ratings_div = document.getElementById('ratings');
+
+			a.click();
+			await new Promise(resolve => {
+				/*document.addEventListener('DOMContentLoaded', resolve);
+				console.log("click produced DOMContentLoaded event");*/
+
+
+			});
+			
+			
+			/*var curractiveid = oldactiveid;
+			for (let i = 0; i < 20; i++) {
+				setTimeout(console.log(`timeout ${i}`), 2000);
+				if (curractiveid !== oldactiveid) { break; }
+				console.log(`waiting... active = ${curractiveid}`);
+				curractiveid = document.getElementsByClassName('active')[0].id
+			}
+			console.log(`NEW active = ${curractiveid}`);*/
+			return;
+		}
+	}
+	
+	console.log(`Tab name not found on Black Bar: ${tabName}`);
 }
 
 function clickAndGetElement_popuphidden(clickEle, classname_and_idx) {
@@ -1227,6 +1432,7 @@ function extractOnlyElementText(ele) {
     } 
     return eletext;
 }
+
 function tableToArray(tableEle) {
     return ret;
 }
