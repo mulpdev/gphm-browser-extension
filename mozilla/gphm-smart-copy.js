@@ -31,6 +31,8 @@ const HOVERING_DOT_CHAR = '·' // hovering period symbol, seen in Orange Bar etc
 const OUTPUT_DELIM_RATINGS_MARKER = 'QWERTY';
 const GAMESTATPLAYERSTAT_ORDERED = ['Player', 'G', 'A', 'PTS', "'+/-", 'PIM', 'S', 'HT', 'BKS', 'GVA', 'TKA', 'FO%', 'PP TOI', 'SH TOI', 'TOI', 'PER'];
 
+const LEAGUE_ID = {'GHL':'1-A', 'SHL':'2-A', 'BHL':'3-A', 'CHL':'4-A', 'IHL':'5-A', 'LIHL':'6-A'};
+
 let ALL_ATTRIBS_OBJ = {};
 for (A of ATTRIBS) {
     ALL_ATTRIBS_OBJ[A] = A;
@@ -191,8 +193,8 @@ function assistantReportHandler(menuItemId) {
     
 }
 
-function walkSeasonGamesHandler(menuItemId) {
-    console.log("in walkToJsonRoot()");
+function gamePageHandler(menuItemId) {
+    console.log("in gamePageHandler()");
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
@@ -209,6 +211,33 @@ function walkSeasonGamesHandler(menuItemId) {
         // Overwrite the clipboard content.
         event.preventDefault();
         event.clipboardData.setData("text/plain",  modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+}
+
+function walkSeasonGamesHandler(menuItemId) {
+	console.log('in ' + get_function_name(arguments.callee));
+    function oncopy(event) {
+			document.removeEventListener("copy", oncopy, true);
+			// Hide the event from the page to prevent tampering.
+			event.stopImmediatePropagation();
+			let modified = '';
+			/* CODE HERE */
+
+				let url = dayGames[j].Link;
+				let dom = UrlToDOM(url);
+
+				let boxscore = htmlParserGamePageBoxScore(dom, url);
+				let stats = htmlParserGamePageStats(dom);
+				let lineup = htmlParserGamePageLineUp(dom);
+
+			/* END CODE HERE */
+			// Overwrite the clipboard content.
+			event.preventDefault();
+			event.clipboardData.setData("text/plain",  modified);
     }
     document.addEventListener("copy", oncopy, true);
 
@@ -663,81 +692,97 @@ function htmlParserAssistantTeamOverview() {
     //console.log(TeamOverview)
     return TeamOverview;
 }
+function htmlParserLeagueSchedule(dom) {
+	console.log('in ' + get_function_name(arguments.callee));
 
-function htmlParserLeagueSchedule() {
-		//let boxscore = htmlParserGamePageBoxScore(UrlToDOM('https://gameplanhockey.com/game?gpid=373320-A'), 'https://gameplanhockey.com/game?gpid=373320-A');
-    //return
-	//
-		//console.log("in htmlParserLeagueSchedule");
-    let element = document.getElementById("tabs-schedule");
-    clickAndGetElement_popuphidden(element, [["tabs-schedule", 0]]) // ignore return
+	//let content_schedule = dom.getElementById('schedule');
 
-    let contentDiv = document.getElementById('content');
+	// Get all the Home/Away/Link 
+	let seasonGames = [];
+	for (let i = 1; i < 87; i++) {
+		//let dayIdSel = `div [id='day-${i}']`; 
+		//let dayDiv = content_schedule.querySelector(dayIdSel);
+		let dayDiv = dom.getElementById(`day-${i}`); 
+		let dayGames = htmlParserDayDiv(dayDiv);
+		for (let j = 0; j < dayGames.length; j++) {
+			let gameobj = {};
+			console.log(`Day ${i} Game ${j+1} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
+			gameobj.day = i;
+			gameobj.day_length = dayGames.length;
+			gameobj.day_game = j
+			gameobj.away = dayGames[j].Away
+			gameobj.home = dayGames[j].Home
+			gameobj.url = dayGames[j].Link;
+			seasonGames.push(gameobj);
+		}
+	}
+	return seasonGames;
+}
+function htmlParserGamePage(gameobj) {
+	console.log('in ' + get_function_name(arguments.callee));
+	let url = gameobj.url;
+	let dom = synchronous_click_link_get_DOM(url);
 
-    // Get all the Home/Away/Link 
-    let seasonResults = [];
-    for (let i = 7; i < 87; i++) {
-			let dayIdSel = `div [id='day-${i}']`; 
-			let dayDiv = contentDiv.querySelector(dayIdSel);
-			let dayGames = htmlParserDayDiv(dayDiv);
-			console.log(`Day ${i} --------------------------------------------`) 
-			for (let j = 0; j < dayGames.length; j++) {
-				console.log(`Day ${i} Game ${j+1} of ${dayGames.length} ${dayGames[j].Away} AT ${dayGames[j].Home}`) 
-				
-				let url = dayGames[j].Link;
-				let dom = UrlToDOM(url);
+	let boxscore = htmlParserGamePageBoxScore(dom, url);
+	let stats = htmlParserGamePageStats(dom, url);
+	let lineup = htmlParserGamePageLineUp(dom, url);
 
-				let boxscore = htmlParserGamePageBoxScore(dom, url);
-				let stats = htmlParserGamePageStats(dom);
-				let lineup = htmlParserGamePageLineUp(dom);
+	for (let k = 0; k < 2; k++) {
+		let tmpstats = stats[k];
+		let tmplineup = lineup[k];
 
-				for (let k = 0; k < 2; k++) {
-					let tmpstats = stats[k];
-					let tmplineup = lineup[k];
-
-					var l = -1;
-					for (let po of tmpstats) {
-						l += 1;
-						for (let lo of tmplineup) {
-							if (po.url === lo.url) {
-								stats[k][l]['position'] = lo.position;
-								stats[k][l]['linenum'] = lo.linenum;
-							}
-						}
-					}
+		var l = -1;
+		for (let po of tmpstats) {
+			l += 1;
+			for (let lo of tmplineup) {
+				if (po.url === lo.url) {
+					stats[k][l]['position'] = lo.position;
+					stats[k][l]['linenum'] = lo.linenum;
 				}
-
-				let results = {'boxscore': boxscore, 'playerstats': stats};
-				seasonResults.push(results);
 			}
-    }
-    let data = JSON.stringify(seasonResults);
-    console.log(data);
-    downloadJson('data.json', data);
+		}
+	}
+	return {'boxscore': boxscore, 'playerstats': stats};
 }
 
 function htmlParserDayDiv(dayDiv) {
-    let ret = [];
+	console.log('in ' + get_function_name(arguments.callee));
+	console.log(dayDiv)
+	let ret = [];
 
-    let rows = dayDiv.querySelectorAll('tr');
-    for (row of rows) {
-        if (row.querySelectorAll('th').length > 0) {
-            continue;
-        }
-        let tmp = {};
-        let tds = row.querySelectorAll('td');
-        
-        tmp['Home'] = tds[0].querySelector('a').title;
-        tmp['Away'] = tds[1].querySelector('a').title;
-        tmp['Link'] = tds[3].querySelector('a').href;
-        ret.push(tmp)
-    }
-    return ret;
+	let rows = dayDiv.querySelectorAll('tr');
+	for (row of rows) {
+		if (row.querySelectorAll('th').length > 0) {
+				continue;
+		}
+		let game = {};
+		let tds = row.querySelectorAll('td');
+
+		if (tds !== null) {
+			// dead or changed teams after that day have no a element
+			var tmp = tds[0].querySelector('a');
+			if (tmp === null) { tmp = tds[0].querySelector('.show-for-small-up'); }
+			game['Home'] = tmp.title;
+
+			tmp = tds[1].querySelector('a');
+			if (tmp === null) { tmp = tds[1].querySelector('.show-for-medium-up'); }
+			game['Away'] = tmp.title;
+
+			game['Link'] = tds[3].querySelector('a').href;
+			ret.push(game)
+		}
+	}
+	return ret;
 }
 
-function htmlParserGamePageBoxScore(document, url) {
-    //console.log("in htmlParserGamePageBoxScore");
-    let boxscoreDiv = document.getElementById('boxscore');
+function htmlParserGamePageBoxScore(dom, url) {
+	console.log('in ' + get_function_name(arguments.callee));
+  let boxscoreDiv = dom.getElementById('boxscore');
+	if (boxscoreDiv === null) {
+		console.log(`boxscoreDiv is null for game: ${url}`);
+		boxscoreDiv.id // Force Crash
+	}
+	
 
     let cols = boxscoreDiv.querySelectorAll('.column');
     let leftcol = cols[0];
@@ -823,8 +868,8 @@ function htmlParserGamePageBoxScore(document, url) {
     return sbp;
 }
 
-function htmlParserGamePageStats(document) {
-	//console.log("in htmlParserGamePageStats()")
+function htmlParserGamePageStats(document, url) {
+	console.log('in ' + get_function_name(arguments.callee));
 
 	let blackmenu = document.getElementById('tab-stats');
 	let stats_tab =  blackmenu.getElementsByClassName('tab-menu__link');
@@ -869,7 +914,7 @@ function htmlParserGamePageLineUp(document) {
 
 	let blackmenu = document.getElementById('tab-lineup');
 	let lineup_tab =  blackmenu.getElementsByClassName('tab-menu__link');
-	lineup_tab[0].click();
+	//lineup_tab[0].click();
 
 	let lineupdiv = document.getElementById('lineup');
 	let table = lineupdiv.getElementsByTagName('table');
@@ -893,16 +938,19 @@ function htmlParserGamePageLineUp(document) {
 					var tmp = playerlink.textContent.split(' ');
 					let name = tmp.slice(1).join(" ");
 
-					let url = gphmRelToURL(playerlink.rel);   
+					let url = gphmRelToURL(playerlink.rel);
 					
 					let pos = tds[0].childNodes[1].textContent.trim();
 					let linenum = -1;
 					if (linename.indexOf('line') !== -1) { linenum = parseInt(linename.charAt(0)); }
 					else if (linename.indexOf('defence') !== -1) { linenum = parseInt(linename.charAt(0)); }
-					else { pos = 'G'; }
+					else if (linename.indexOf('Starter') !== -1) { pos =  "G"; }
+					else if (linename.indexOf('Backup') !== -1) { pos =  "G"; }
+					else { pos = 'InjuryReplacement'; }
 					
 					let player = {'name': name, 'position': pos, 'linenum': linenum, 'url': url};
 				 
+				    
 					lineup_array[i-1].push(player);
 				}   
 			}
@@ -1198,6 +1246,29 @@ function htmlParserPlayerPage() {
 /********************************************************
 Helper Functions
 ********************************************************/
+function get_function_name(arguments_dot_callee) {
+   //var myName = arguments.callee.toString();
+   var myName = arguments_dot_callee.toString();
+   myName = myName.substr('function '.length);
+   myName = myName.substr(0, myName.indexOf('('));
+   return myName;
+}
+
+function get_page_tabs() {
+	var ret = {'tabs': [], 'active': null};
+	let tabmenu = document.querySelector('.tab-menu.game-top__tab-menu');
+	let tabscontent_div = document.querySelector('.tabs-content');
+
+	for (var dd_ele of tabmenu.getElementsByTagName('dd')) {
+		let id = dd_ele.textContent.trim().toLowerCase();
+		let active = document.getElementById(id).classList.contains("active");
+
+		ret.tabs.push(id);
+		if (active) { ret.active = id; }
+		console.log(`tab id: ${id} active: ${active}`);
+	}
+}
+
 function gphmConvertToPlayerObjAttributeName(str) {
 	let spl = str.split(' ');
 	let ret = '';
@@ -1405,6 +1476,15 @@ async function clickPlayerPageTab(tabName) {
 	console.log(`Tab name not found on Black Bar: ${tabName}`);
 }
 
+function synchronous_click_tab_and_get_DOM(clickEle) {
+	let url='https://gameplanhockey.com/league/tabloader_schedule?gpid=1-A'
+	console.log(url);
+	return synchronous_click_link_get_DOM(url);
+}
+
+
+
+
 function clickAndGetElement_popuphidden(clickEle, classname_and_idx) {
     clickEle.click();
 
@@ -1447,7 +1527,7 @@ function trToArray(trEle) {
     return ret;
 }
 
-function UrlToDOM(url)
+function synchronous_click_link_get_DOM(url)
 {
     xmlhttp=new XMLHttpRequest();
     xmlhttp.open("GET",url,false);
@@ -1456,7 +1536,7 @@ function UrlToDOM(url)
     return parser.parseFromString(xmlhttp.responseText,"text/html");      
 }
 
-function downloadJson(filename, text) {
+function create_file_download(filename, text) {
 // https://stackoverflow.com/questions/3665115/how-to-create-a-file-in-memory-for-user-to-download-but-not-through-server
     var element = document.createElement('a');
     element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -1513,28 +1593,28 @@ BACKUP
 ****************************************/
 
 function testerHandler(text, html) {
-    function oncopy(event) {
-        document.removeEventListener("copy", oncopy, true);
-        // Hide the event from the page to prevent tampering.
-        //event.stopImmediatePropagation(); // if event exists??
-        let modified = '';
-        
-        /* CODE HERE */
-        console.log("TESTER RUNNING");
-        modified = "LOL TEST";
+	console.log('in ' + get_function_name(arguments.callee));
+	function oncopy(event) {
+		document.removeEventListener("copy", oncopy, true);
+		// Hide the event from the page to prevent tampering.
+		//event.stopImmediatePropagation(); // if event exists??
+		let modified = '';
+		
+		/*START CODE HERE */
+		/*-----------*/
 
-        modified = htmlParserGamePageBoxScore(document, 'TEST');
 
-        /* END CODE HERE */
+		/*---------------*/
+		/* END CODE HERE */
 
-        // Overwrite the clipboard content.
-        event.preventDefault();
-        event.clipboardData.setData("text/plain",  modified);
-    }
-    document.addEventListener("copy", oncopy, true);
-    // Requires the clipboardWrite permission, or a user gesture:
-    document.execCommand("copy");
-    console.log("TESTER COMPLETE!");
+		// Overwrite the clipboard content.
+		event.preventDefault();
+		event.clipboardData.setData("text/plain",  modified);
+	}
+	document.addEventListener("copy", oncopy, true);
+	// Requires the clipboardWrite permission, or a user gesture:
+	document.execCommand("copy");
+	console.log('COMPLETE ' + get_function_name(arguments.callee));
 }
 
 function calcBalazsRatio(selfTeam, oppTeam) {
