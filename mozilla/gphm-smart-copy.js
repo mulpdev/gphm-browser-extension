@@ -315,21 +315,38 @@ function htmlParserScoutingProfile() {
     p = paras[1];
     let t = p.textContent;
     let spl = t.split(' is');
-    let name = spl[0];
     
-    let words = ['brings', 'blends', 'tries', 'leads', 'prioritizes']
+    /*let words = ['brings', 'blends', 'tries', 'leads', 'prioritizes']
     for (let word of words) {
         if (name.indexOf(word) !== -1){
             spl = name.split(' ' + word);
             name = spl[0]
             break;
         }
-    }
-    fakeScoutingProfileObj['Name'] = name.trim();
-    
+    }*/
+	
     // get scouting data
     let srcontainers = document.getElementsByClassName('scouting-report-container');
-    srcontainer = srcontainers[0];
+		let srcontainer = null;
+		for (var i = 0; i < srcontainers.length; i++) {
+
+			let sc = srcontainers[i];
+			let h3 = sc.querySelector('h3');
+			console.log(h3.textContent);
+			let idx = h3.textContent.indexOf("Profile");
+			if ((h3 !== null && (idx > -1))) {
+				srcontainer = sc;
+				break;
+			}
+		}
+		if (srcontainer === null) { console.log("ERROR no srcontainer with <h3> contains 'Profile'"); return null};
+
+		let scoutingReports = document.getElementById('scoutingReports');
+		let bluebubble = scoutingReports.querySelector('div');
+		let bbh3 = bluebubble.querySelector('h3');
+		let name = bbh3.textContent.replace('Scouting report of ', '');
+    fakeScoutingProfileObj['Name'] = name.trim();
+    
     
     let cols = srcontainer.getElementsByClassName('column');
     let left = cols[0];
@@ -357,7 +374,7 @@ function htmlParserScoutingProfile() {
         fakeScoutingProfileObj[M.Key]['Width'] = M.Width;
         
     }
-    
+		console.log(lpanels); 
     let team_culture_panel = lpanels[2];
     dli_all = team_culture_panel.querySelectorAll('li')
     let tc_category = ['Culture_Influence', 'Culture_Impact', 'Teamwork_Impact', 'Winner_Instinct'];
