@@ -110,6 +110,7 @@ const FA_FPO_ATTRIBS = [
 
 
 const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
+const ID_DEFENSE_TACTICS = "gphm-defense-profile";
 const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
 const ID_COPY_PLAYER_PAGE = "gphm-smart-copy-player-page";
@@ -135,6 +136,9 @@ function copyToClipboardHandler(menuItemId) {
         
         if (menuItemId === ID_COPY_SCOUTING_PROFILE) {
             modified = htmlParserScoutingProfile();
+        }
+			 else if (menuItemId === ID_DEFENSE_TACTICS) {
+            modified = htmlParserTactics();
         }
 				else if (menuItemId === ID_COPY_PLAYER_PAGE) {
             fakePlayerObj = htmlParserPlayerPage();
@@ -450,6 +454,245 @@ function htmlParserScoutingProfile() {
     modified = modified.replaceAll(SEP, "\t");
     return modified;
 }
+
+function htmlParserTactics() {
+    let fakeScoutingProfileObj = {};
+		fakeScoutingProfileObj = {};
+
+    // get name
+    let notes = document.getElementsByClassName('panel scouting-report-container__notes');
+    let note = notes[0];
+    let paras = note.querySelectorAll('p');
+    let p = paras[0];
+    let tmpdate = p.textContent;
+    tmpdate = tmpdate.split('Created ');
+    fakeScoutingProfileObj['Date'] = tmpdate.join(' ').trim();
+    
+    // get scouting report container
+    let srcontainers = document.getElementsByClassName('scouting-report-container');
+		let srcontainer = null;
+		
+		var report_type = "";
+		const OFFENSE = "Offense"
+		const DEFENSE = "Defense"
+		const TACTIC_REPORT="tactic report";
+		for (var i = 0; i < srcontainers.length; i++) {
+			let sc = srcontainers[i];
+			let h3 = sc.querySelector('h3');
+			// <div id="scouting-report-scoutingreports140669-a" class="scouting-report-container" style="display: none;">
+			let idx = h3.textContent.indexOf(TACTIC_REPORT); // Identify the report type
+
+			if (h3.textContent.indexOf(OFFENSE) > -1) {report_type = OFFENSE;} // Identify the report type
+			else if (h3.textContent.indexOf(DEFENSE) > -1) {report_type = DEFENSE;} // Identify the report type
+			else { console.log(`ERROR srcontainer with <h3> does not contain ${OFFENSE} or ${DEFENSE}: ${h3.textContent}`); return null};
+
+			if ((h3 !== null && (idx > -1))) {
+				srcontainer = sc;
+				break;
+			}
+		}
+		if (srcontainer === null) { console.log(`ERROR no srcontainer with <h3> contains ${TACTIC_REPORT}`); return null};
+
+		let scoutingReports = document.getElementById('scoutingReports');
+		let bluebubble = scoutingReports.querySelector('div');
+		let bbh3 = bluebubble.querySelector('h3');
+		let name = bbh3.textContent.replace('Scouting report of ', '');
+    fakeScoutingProfileObj['Name'] = name.trim();
+   
+		var fakeKeys;
+		if (report_type == OFFENSE) { 
+			fakeScoutingProfileObj = htmlParserOffenseTactics(srcontainer, fakeScoutingProfileObj);
+			fakeKeys = ['tactics_offense', 'tactics_pp'];
+		}
+		else if (report_type == DEFENSE) { 
+			fakeScoutingProfileObj = htmlParserDefenseTactics(srcontainer, fakeScoutingProfileObj);
+			fakeKeys = ['tactics_defense', 'tactics_pk', 'tactics_play_against', 'tactics_play_againstPP'];
+		}
+
+    // Make string
+    let SEP = '@ '
+    let modified = '';
+		let headings = '';
+	  modified += fakeScoutingProfileObj.Date + SEP;
+    modified += fakeScoutingProfileObj.Name + SEP;
+
+    // Teammate Likes/Dislikes
+
+		for (var k = 0; k < fakeKeys.length; k++) {
+			let key = fakeKeys[k];
+			for (let i = 0; i < fakeScoutingProfileObj[key].length; i++) {
+					let tmp = fakeScoutingProfileObj[key][i];
+					//modified += `${tmp.key} ${tmp.val}` + SEP;
+					modified += `${tmp.val}` + SEP;
+					headings += `${tmp.key}` + SEP;
+					if (report_type == OFFENSE) {if ((i > 0) && (i%2!=0)) { modified += SEP;}}
+			}
+			if (report_type != OFFENSE) {modified += SEP;} // Don't double up on SEP for offensive tactics
+		}
+	
+		console.log(fakeScoutingProfileObj);
+    console.log(modified);
+    modified = modified.replaceAll(SEP, "\t");
+
+    return modified;
+}
+
+function htmlParserDefenseTactics(srcontainer, fakeScoutingProfileObj) {
+		// panel h4
+	  // 0 CT, MF, LWL, SPD
+		// 1 DIA, SBOX, WED
+		// 2 CTN, DNC, PP, TR
+		// 3 UMB, OVR, 131, SPDPP
+	  
+	  // no more h4
+	  // 4 FOCUS/PERSISTENCE/LEADERSHIP
+	  // 5 AGI / FIGHT
+	  // 6 Interception, Puck Battle
+
+		//let row = srcontainer.getElementsByClassName('row')[0];
+	  //let columns = row.getElementsByClassName('column');
+		//let col_tactics = columns[0];
+		//let col_other = columns[a];
+		//let panels = col_tactics.getElementsByClassName('panel');
+
+		let panels = srcontainer.getElementsByClassName('panel');
+		// panels[0] is "brief defense tactic report" summary thing
+		for (var i = 1; i < panels.length; i++) {
+			let panelqqq = [];
+			let panel = panels[i];
+			let panel_name = panel.querySelector('h3').textContent.trim();
+			if (panel_name.indexOf('Defense tactics') > -1) { panel_name = "tactics_defense"; } 
+			else if (panel_name.indexOf('Penalty kill tactics') > -1) { panel_name = "tactics_pk"; } 
+			else if (panel_name.indexOf('Playing against powerplay') > -1) { panel_name = "tactics_play_againstPP"; } 
+			else if (panel_name.indexOf('Playing against') > -1) { panel_name = "tactics_play_against"; } 
+			else { 
+				panel_name = panel.getElementsByTagName('h3')[0].textContent;
+				panel_name = panel_name.toLowerCase().replaceAll(' ', '_');
+			}
+
+			let h4_arr = panel.getElementsByTagName('h4');
+			let li_arr = panel.getElementsByTagName('li');
+
+			
+			for (var j = 0; j < li_arr.length; j++) {
+				let em = li_arr[j].childNodes[1].textContent.trim();
+				em = em.toLowerCase().replace(' ', '_');
+				let val = li_arr[j].childNodes[2].textContent.trim(); 
+
+				var color;
+				var progress_bar;
+				var perc;
+
+				// bad/alert/red, average/warning/orange, good/ok/blue, excellent/success/green
+        //let M = htmlParserGphmMeter(dli);
+				if (val.indexOf('Bad') > -1) { progress_bar='red'; color = 'alert'; perc = 25; } 
+				else if (val.indexOf('Average') > -1) { progress_bar='orange'; color = 'warning'; perc = 50; } 
+				else if (val.indexOf('Good') > -1) { progress_bar='blue'; color = 'ok'; perc = 75; } 
+				else if (val.indexOf('Excellent') > -1) { progress_bar='green'; color = 'success'; perc = 100; } 
+				else { console.log(`value is not bad/average/good/excellent: ${val}`); }
+
+				let results = {};
+				results['val'] = val;
+				results['progress_bar'] = progress_bar;
+				results['color'] = color;
+				results['percent'] = perc;
+				if (i < 5) {
+					let tactic = h4_arr[j].textContent.trim();
+					tactic = tactic.toLowerCase().replaceAll(' ', '_');
+					
+
+					results['key'] = tactic;
+					panelqqq.push(results);
+				}
+				else {
+					results['key'] = em;
+					panelqqq.push(results);
+				}
+			}
+			fakeScoutingProfileObj[panel_name] = panelqqq;
+		}
+		return fakeScoutingProfileObj;
+}
+
+function htmlParserOffenseTactics(srcontainer, fakeScoutingProfileObj) {
+		// panel h4
+	  // 0 CT, MF, LWL, SPD
+		// 1 DIA, SBOX, WED
+		// 2 CTN, DNC, PP, TR
+		// 3 UMB, OVR, 131, SPDPP
+	  
+	  // no more h4
+	  // 4 FOCUS/PERSISTENCE/LEADERSHIP
+	  // 5 AGI / FIGHT
+	  // 6 Interception, Puck Battle
+
+		//let row = srcontainer.getElementsByClassName('row')[0];
+	  //let columns = row.getElementsByClassName('column');
+		//let col_tactics = columns[0];
+		//let col_other = columns[a];
+		//let panels = col_tactics.getElementsByClassName('panel');
+
+		let panels = srcontainer.getElementsByClassName('panel');
+		// panels[0] is "brief defense tactic report" summary thing
+		for (var i = 1; i < panels.length; i++) {
+			let panelqqq = [];
+			let panel = panels[i];
+			let panel_name = panel.querySelector('h3').textContent.trim();
+			if (panel_name.indexOf('Offense tactics') > -1) { panel_name = "tactics_offense"; } 
+			else if (panel_name.indexOf('Powerplay tactics') > -1) { panel_name = "tactics_pp"; } 
+			else { 
+				panel_name = panel.getElementsByTagName('h3')[0].textContent;
+				panel_name = panel_name.toLowerCase().replaceAll(' ', '_');
+			}
+
+			
+			let h4_arr = panel.getElementsByTagName('h4');
+
+			if (h4_arr.length === 0) { h4_arr = panel.getElementsByTagName('h3'); }
+
+			let li_arr = panel.getElementsByTagName('li');
+
+			for (var j = 0; j < h4_arr.length; j++) {
+				let li_cnt = 2;
+				if (li_arr.length < 2) { li_cnt = 1; }
+
+				for (var k = 0; k < li_cnt; k++) {
+					let em = li_arr[j+k].childNodes[1].textContent.trim();
+					em = em.toLowerCase().replace(' ', '_');
+					let val = li_arr[j+k].childNodes[2].textContent.trim(); 
+
+					var color;
+					var progress_bar;
+					var perc;
+
+					// bad/alert/red, average/warning/orange, good/ok/blue, excellent/success/green
+					//let M = htmlParserGphmMeter(dli);
+					if (val.indexOf('Bad') > -1) { progress_bar='red'; color = 'alert'; perc = 25; } 
+					else if (val.indexOf('Average') > -1) { progress_bar='orange'; color = 'warning'; perc = 50; } 
+					else if (val.indexOf('Good') > -1) { progress_bar='blue'; color = 'ok'; perc = 75; } 
+					else if (val.indexOf('Excellent') > -1) { progress_bar='green'; color = 'success'; perc = 100; } 
+					else { console.log(`value is not bad/average/good/excellent: ${val}`); }
+
+					let results = {};
+					results['val'] = val;
+					results['progress_bar'] = progress_bar;
+					results['color'] = color;
+					results['percent'] = perc;
+
+					let tactic = h4_arr[j].textContent.trim();
+					tactic = tactic.toLowerCase().replaceAll(' ', '_');
+
+					let key = `${tactic}_${em}`
+					results['key'] = key;
+					panelqqq.push(results);
+				}
+				fakeScoutingProfileObj[panel_name] = panelqqq;
+			}
+		}
+		return fakeScoutingProfileObj;
+
+}
+
 
 function htmlParserPopup(popupClassName, popupClassIndex) {
     elements = document.getElementsByClassName(popupClassName)
