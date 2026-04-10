@@ -110,7 +110,7 @@ const FA_FPO_ATTRIBS = [
 
 
 const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
-const ID_DEFENSE_TACTICS = "gphm-defense-profile";
+const ID_TACTICS = "gphm-scouting-tactics";
 const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
 const ID_COPY_PLAYER_PAGE = "gphm-smart-copy-player-page";
@@ -137,7 +137,7 @@ function copyToClipboardHandler(menuItemId) {
         if (menuItemId === ID_COPY_SCOUTING_PROFILE) {
             modified = htmlParserScoutingProfile();
         }
-			 else if (menuItemId === ID_DEFENSE_TACTICS) {
+			 else if (menuItemId === ID_TACTICS) {
             modified = htmlParserTactics();
         }
 				else if (menuItemId === ID_COPY_PLAYER_PAGE) {
@@ -456,8 +456,7 @@ function htmlParserScoutingProfile() {
 }
 
 function htmlParserTactics() {
-    let fakeScoutingProfileObj = {};
-		fakeScoutingProfileObj = {};
+    let fakeScoutingProfileObj = {"TYPE":undefined};
 
     // get name
     let notes = document.getElementsByClassName('panel scouting-report-container__notes');
@@ -478,6 +477,10 @@ function htmlParserTactics() {
 		const TACTIC_REPORT="tactic report";
 		for (var i = 0; i < srcontainers.length; i++) {
 			let sc = srcontainers[i];
+
+			// Only deal with the visible element
+			if (sc.style.display === 'none') { continue; }
+
 			let h3 = sc.querySelector('h3');
 			// <div id="scouting-report-scoutingreports140669-a" class="scouting-report-container" style="display: none;">
 			let idx = h3.textContent.indexOf(TACTIC_REPORT); // Identify the report type
@@ -491,6 +494,7 @@ function htmlParserTactics() {
 				break;
 			}
 		}
+		fakeScoutingProfileObj['TYPE'] = report_type;
 		if (srcontainer === null) { console.log(`ERROR no srcontainer with <h3> contains ${TACTIC_REPORT}`); return null};
 
 		let scoutingReports = document.getElementById('scoutingReports');
@@ -518,20 +522,40 @@ function htmlParserTactics() {
 
     // Teammate Likes/Dislikes
 
+		//console.log(`${fakeScoutingProfileObj['TYPE']}`);
 		for (var k = 0; k < fakeKeys.length; k++) {
 			let key = fakeKeys[k];
 			for (let i = 0; i < fakeScoutingProfileObj[key].length; i++) {
 					let tmp = fakeScoutingProfileObj[key][i];
-					//modified += `${tmp.key} ${tmp.val}` + SEP;
+					//console.log(`${i} ${tmp.key} ${tmp.val} ${SEP}`);
+					modified += `${tmp.val}` + SEP;
+					headings += `${tmp.key}` + SEP;
+					if (report_type == OFFENSE) {
+						// Offense grouping is visually separated by tactic, which has 2 fields: Playmaking, Scoring
+						if ((i > 0) && (i%2!=0)) { modified += SEP; } 
+					}
+			}
+
+			// Don't double up on SEP for offensive tactics
+			// Defense grouping is visually separated by groups 5v5 tactics, PK tactics, Playing against 5v5, playing against PP
+			if (report_type != OFFENSE) {modified += SEP;} 
+		}
+
+    // Teammate Likes/Dislikes
+
+		for (var k = 0; k < fakeKeys.length; k++) {
+			let key = fakeKeys[k];
+			for (let i = 0; i < fakeScoutingProfileObj[key].length; i++) {
+					let tmp = fakeScoutingProfileObj[key][i];
 					modified += `${tmp.val}` + SEP;
 					headings += `${tmp.key}` + SEP;
 					if (report_type == OFFENSE) {if ((i > 0) && (i%2!=0)) { modified += SEP;}}
 			}
 			if (report_type != OFFENSE) {modified += SEP;} // Don't double up on SEP for offensive tactics
 		}
-	
+
 		console.log(fakeScoutingProfileObj);
-    console.log(modified);
+    //console.log(`modified before tabs: ${modified}`);
     modified = modified.replaceAll(SEP, "\t");
 
     return modified;
@@ -698,6 +722,9 @@ function htmlParserPopup(popupClassName, popupClassIndex) {
     elements = document.getElementsByClassName(popupClassName)
     popup = elements[popupClassIndex];
     if (popup === undefined) {
+        console.error(`htmlParserPopup(${popupClassName} , ${popupClassIndex} )`);
+        console.error(`elements[${popupClassIndex}] =`);
+				console.log(elements)
         console.error("open (clicked on) player popup NOT detected");
         return null;
     }

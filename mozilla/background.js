@@ -1,5 +1,5 @@
 const ID_COPY_SCOUTING_PROFILE = "gphm-scouting-profile";
-const ID_DEFENSE_TACTICS = "gphm-defense-profile";
+const ID_TACTICS = "gphm-scouting-tactics";
 const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
 const ID_WALK_SEASON = "gphm-smart-copy-league-season";
@@ -21,8 +21,8 @@ browser.contextMenus.create({
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
-        id: ID_DEFENSE_TACTICS,
-        title: "GPHM Smart Copy Defense Tactics",
+        id: ID_TACTICS,
+        title: "GPHM Smart Copy Scouting Tactics",
         contexts: ["page"],
     },
     () => void browser.runtime.lastError,
@@ -68,7 +68,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === ID_COPY_SCOUTING_PROFILE) {
         copyFunc = "copyToClipboardHandler";
     }
-    if (info.menuItemId === ID_DEFENSE_TACTICS) {
+    if (info.menuItemId === ID_TACTICS) {
         copyFunc = "copyToClipboardHandler";
     }
     if (info.menuItemId === ID_COPY_PLAYER_PAGE) {
