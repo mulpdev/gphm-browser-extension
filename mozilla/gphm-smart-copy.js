@@ -115,6 +115,7 @@ const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
 const ID_COPY_PLAYER_PAGE = "gphm-smart-copy-player-page";
 const ID_WALK_SEASON = "gphm-smart-copy-league-season";
+const ID_COPY_GAME = "gphm-smart-copy-game";
 
 const OUTPUT_FORMAT = {
     "DB":0,
@@ -197,8 +198,8 @@ function assistantReportHandler(menuItemId) {
     
 }
 
-function gamePageHandler(menuItemId) {
-    console.log("in gamePageHandler()");
+function gamePageHandler(menuItemId, url) {
+    console.log(`in gamePageHandler()  ${url}`);
     function oncopy(event) {
         document.removeEventListener("copy", oncopy, true);
         // Hide the event from the page to prevent tampering.
@@ -206,10 +207,7 @@ function gamePageHandler(menuItemId) {
         let modified = '';
         /* CODE HERE */
 
-        if (menuItemId === ID_WALK_SEASON) {
-            console.log("in createJsonHandler");
-            modified = htmlParserLeagueSchedule();
-        }
+          modified = htmlParserGamePage(url)
 
         /* END CODE HERE */
         // Overwrite the clipboard content.
@@ -1005,9 +1003,8 @@ function htmlParserLeagueSchedule(dom) {
 	}
 	return seasonGames;
 }
-function htmlParserGamePage(gameobj) {
+function htmlParserGamePage(url) {
 	console.log('in ' + get_function_name(arguments.callee));
-	let url = gameobj.url;
 	let dom = synchronous_click_link_get_DOM(url);
 
 	let boxscore = htmlParserGamePageBoxScore(dom, url);
@@ -1029,7 +1026,9 @@ function htmlParserGamePage(gameobj) {
 			}
 		}
 	}
-	return {'boxscore': boxscore, 'playerstats': stats};
+	ret =  {'boxscore': boxscore, 'playerstats': stats};
+	console.log(ret);
+	return ret;
 }
 
 function htmlParserDayDiv(dayDiv) {

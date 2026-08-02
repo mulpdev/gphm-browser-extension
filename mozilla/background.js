@@ -3,6 +3,7 @@ const ID_TACTICS = "gphm-scouting-tactics";
 const ID_COPY_POPUP_FA = "gphm-open-popup-fadraft";
 const ID_COPY_POPUP_DB = "gphm-open-popup-db";
 const ID_WALK_SEASON = "gphm-smart-copy-league-season";
+const ID_COPY_GAME = "gphm-smart-copy-game";
 const ID_ASSISTANT_REPORT = "gphm-smart-copy-assistant-report";
 const ID_COPY_PLAYER_PAGE = "gphm-smart-copy-player-page";
 const ID_TESTER = "gphm-smart-copy-TESTER";
@@ -49,6 +50,13 @@ browser.contextMenus.create({
     () => void browser.runtime.lastError,
 );
 browser.contextMenus.create({
+        id: ID_COPY_GAME,
+        title: "GPHM Smart Copy Game",
+        contexts: ["page"],
+    },
+    () => void browser.runtime.lastError,
+);
+browser.contextMenus.create({
         id: ID_ASSISTANT_REPORT,
         title: "GPHM Smart Assistant Report",
         contexts: ["page"],
@@ -83,6 +91,9 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     else if (info.menuItemId === ID_WALK_SEASON) {
         copyFunc = "walkSeasonGamesHandler";
     }
+    else if (info.menuItemId === ID_COPY_GAME) {
+        copyFunc = "gamePageHandler";
+    }
     else if (info.menuItemId === ID_ASSISTANT_REPORT) {
         copyFunc = "assistantReportHandler";
     }
@@ -91,7 +102,10 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     }
  
     // gphm-smart-copy.js defines function copyToClipboard.
-    const code = copyFunc + "('" + info.menuItemId + "')";
+    let code = copyFunc + "('" + info.menuItemId + "')";
+		if (copyFunc === "gamePageHandler") {
+			 code = copyFunc + "(" + "'" + info.menuItemId + "'" + ", " + "'" + tab.url + "'" + ")";
+		}
     browser.tabs.executeScript({
         code: "typeof " + copyFunc + " === 'function';",
     }).then((results) => {
