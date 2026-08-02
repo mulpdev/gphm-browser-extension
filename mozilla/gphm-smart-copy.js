@@ -116,11 +116,68 @@ const ID_COPY_POPUP_DB = "gphm-open-popup-db";
 const ID_COPY_PLAYER_PAGE = "gphm-smart-copy-player-page";
 const ID_WALK_SEASON = "gphm-smart-copy-league-season";
 const ID_COPY_GAME = "gphm-smart-copy-game";
+const ID_CLICK = "gphm-smart-copy-click";
 
 const OUTPUT_FORMAT = {
     "DB":0,
     "FA_DRAFT":1,
 }
+
+/********************************************************
+Auto clicking
+********************************************************/
+function xyz(menuItemId) {
+    // params used to be (text, html) but weren't actually used
+    function oncopy(event) {
+        document.removeEventListener("copy", oncopy, true);
+        // Hide the event from the page to prevent tampering.
+        event.stopImmediatePropagation();
+        let modified = '';
+        
+        /* CODE HERE */
+				walk_page_with_clicks()
+        /* END CODE HERE */
+        
+        // Overwrite the clipboard content.
+        event.preventDefault();
+        event.clipboardData.setData("text/plain",  modified);
+        console.log(modified);
+    }
+    document.addEventListener("copy", oncopy, true);
+
+    // Requires the clipboardWrite permission, or a user gesture:
+    document.execCommand("copy");
+}
+
+// Usage: await click_ele(ele); inside an async function
+async function click_ele(ele) {
+	kv = {view: window, bubbles: true, cancelable: true, buttons: 1};
+	ele.dispatchEvent(new MouseEvent('mousedown', kv));
+	await new Promise(r => setTimeout(r, 50));
+	ele.dispatchEvent(new MouseEvent('click', kv));
+	ele.dispatchEvent(new MouseEvent('mouseup', kv));
+}
+async function walk_page_with_clicks(url)
+{
+	ele=document.getElementById("tab-rating");
+	ele=ele.querySelector('a');
+	await click_ele(ele);
+
+	ele=document.getElementById("tab-dev-season");
+	ele=ele.querySelector('a');
+	await click_ele(ele);
+
+	ele=document.getElementById("rating-select");
+	option=ele.querySelector('option');
+	ovrset = new Set(option.value.split(','));
+	ovrsz = ovrset.size - 1;
+	console.log(ovrsz);
+
+
+}
+
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /********************************************************
 Handler Functions
@@ -1005,7 +1062,7 @@ function htmlParserLeagueSchedule(dom) {
 }
 function htmlParserGamePage(url) {
 	console.log('in ' + get_function_name(arguments.callee));
-	let dom = synchronous_click_link_get_DOM(url);
+	let dom = make_request_and_get_dom(url);
 
 	let boxscore = htmlParserGamePageBoxScore(dom, url);
 	let stats = htmlParserGamePageStats(dom, url);
@@ -1765,7 +1822,7 @@ async function clickPlayerPageTab(tabName) {
 function synchronous_click_tab_and_get_DOM(clickEle) {
 	let url='https://gameplanhockey.com/league/tabloader_schedule?gpid=1-A'
 	console.log(url);
-	return synchronous_click_link_get_DOM(url);
+	return make_request_and_get_dom(url);
 }
 
 
@@ -1813,7 +1870,7 @@ function trToArray(trEle) {
     return ret;
 }
 
-function synchronous_click_link_get_DOM(url)
+function make_request_and_get_dom(url)
 {
     xmlhttp=new XMLHttpRequest();
     xmlhttp.open("GET",url,false);

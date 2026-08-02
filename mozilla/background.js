@@ -7,6 +7,15 @@ const ID_COPY_GAME = "gphm-smart-copy-game";
 const ID_ASSISTANT_REPORT = "gphm-smart-copy-assistant-report";
 const ID_COPY_PLAYER_PAGE = "gphm-smart-copy-player-page";
 const ID_TESTER = "gphm-smart-copy-TESTER";
+const ID_CLICK = "gphm-smart-copy-click";
+
+browser.contextMenus.create({
+        id: ID_CLICK,
+        title: "GPHM Click",
+        contexts: ["page"],
+    },
+    () => void browser.runtime.lastError,
+);
 browser.contextMenus.create({
         id: ID_COPY_PLAYER_PAGE,
         title: "GPHM Smart Copy Player Page",
@@ -73,6 +82,9 @@ browser.contextMenus.create({
 browser.contextMenus.onClicked.addListener((info, tab) => {
     var copyFunc = ''
 
+    if (info.menuItemId === ID_CLICK) {
+        copyFunc = "xyz";
+    }
     if (info.menuItemId === ID_COPY_SCOUTING_PROFILE) {
         copyFunc = "copyToClipboardHandler";
     }
